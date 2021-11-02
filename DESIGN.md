@@ -1,115 +1,152 @@
-# CS50 Nuggets
+# CS50 Nuggets Final Project
 ## Design Spec
-### Team name, term, year
+### Team 7 (Ellie Boyd, Jeffrey Liu, Brian Chun Yin Ng, Donia Tung), Fall, 2021
 
-> This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
+ According to the [Requirements Spec](https://github.com/CS50Dartmouth21FS1/nuggets-info/blob/main/REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server. Our design also includes grid and player modules. We describe each program and module separately. We do not describe the support library nor the modules that enable features that go beyond the spec. We avoid repeating information that is provided in the requirements spec.
 
-According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
-Our design also includes x, y, z modules.
-We describe each program and module separately.
-We do not describe the `support` library nor the modules that enable features that go beyond the spec.
-We avoid repeating information that is provided in the requirements spec.
+Here we focus on the core subset for both the client and the server:
 
-## Player
+- User interface
+- Inputs and outputs
+- Functional decomposition into modules
+- Pseudo code (plain English-like language) for logic/algorithmic flow
+- Major data structures
+- Testing plan
 
-> Teams of 3 students should delete this section.
+## Client 
+The client acts in one of two modes:
 
-The *client* acts in one of two modes:
+1. spectator, the passive spectator mode described in the requirements spec.
+2. player, the interactive game-playing mode described in the requirements spec.
 
- 1. *spectator*, the passive spectator mode described in the requirements spec.
- 2. *player*, the interactive game-playing mode described in the requirements spec.
-
-### User interface
-
+### User Interface 
 See the requirements spec for both the command-line and interactive UI.
 
-> You may not need much more.
+The client takes three command line arguments; first argument is the hostname or IP address where the server is running, the second argument is the port number on which the server expects messages, and the third (optional) argument determines whether to join as a player or spectator.
 
-### Inputs and outputs
+```bash=
+./client hostname port [playername]
+```
+* [playername] is optional
+* However, if no name is provided, the player is assumed to be a spectator. 
 
-> Briefly describe the inputs (keystrokes) and outputs (display).
-> If you write to log files, or log to stderr, describe that here.
-> Command-line arguments are not 'input'.
+If the playername argument is provided, the client joins as a player and can interactively play the game. Otherwise the client joins as a view-only spectator.
+
+### Inputs and outputs 
+#### Input:
+There are 2 types of inputs for client: 
+
+1. Inputs from command-line (specified above) 
+2. Keystroke inputs after initialization 
+* q quit the game.
+* h move left, if possible
+* l move right, if possible
+* j move down, if possible
+* k move up , if possible
+* y move diagonally up and left, if possible
+* u move diagonally up and right, if possible
+* b move diagonally down and left, if possible
+* n move diagonally down and right, if possible
+
+Where possible means the adjacent gridpoint in the given direction is an empty spot, a pile of gold, or another player.
+
+For each move key, the corresponding Capitalized character will move automatically and repeatedly in that direction, until it is no longer possible.
+
+####  Output: 
+Client's current map, the location of the players, the score, and the status header. 
+The client is responsible for the UI for gameplay and it's "output" will be the game interface. 
 
 ### Functional decomposition into modules
+#### Client Module
+We anticipate the following functions and modules:
+* *main* to drive the client module 
+* *parseArgs* to determine validity of arguments
+* *receiveMessages* to receive messages from sever
+* *sendMessages* to send messages to server
+* *outputMap* to parse through map string and output to user
 
-> List and briefly describe any modules that comprise your client, other than the main module.
- 
+
 ### Pseudo code for logic/algorithmic flow
+```
+parse arguments from user, validate arguments
+starts game with message to server
+upon valid response from server of player/spectator 
+    return respective game screen 
 
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> See the Server section for an example.
-
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
+listen for keyboard input from user: 
+    send messages to server
+listen for messages from server
+    update game screen accordingly 
+```
 
 ### Major data structures
+The client provides the user interface for the playing particpant. 
+It contains no local inherent data structures.  
 
-> A language-independent description of the major data structure(s) in this program.
-> Mention, but do not describe, any libcs50 data structures you plan to use.
+## Server 
 
----
+### User Interface 
+See the requirements spec for the command-line interface. There is no interaction with the user.
 
-## Server
-### User interface
+In order to initialize a server, you will need to provide it a map 
+```bash=
+./server mapPath
+```
 
-See the requirements spec for the command-line interface.
-There is no interaction with the user.
+### Inputs and outputs 
+Inputs: As per the requirements spec, other than the inputted map on which the game instance will be run, the server receives no other inputs directly from the user. All server inputs will be received as messages from the client.
 
-> You may not need much more.
-
-### Inputs and outputs
-
-> Briefly describe the inputs (map file) and outputs (to terminal).
-> If you write to log files, or log to stderr, describe that here.
-> Command-line arguments are not 'input'.
-
+Outputs: As per the requirements spec, the server has no output directly visible by the player. Rather, the server outputs are messages to the client. 
+ 
 ### Functional decomposition into modules
+We anticipate the following functions or modules in our server: 
+* *main* will drive the module 
+* *parseArgs* which will parse and validate the inputted file
+* *initGrid* which will initialize the grid and set gold randomly throughout the maze
+* *receiveMessages* which will be resonsible for handling the messages from the client & acting accordingly
+* *sendMessages* which will send messages to the client
 
-> List and briefly describe any modules that comprise your server, other than the main module.
+We will rely on two helper modules, *grid* and *player*, which define distict data structures that hold the grid structure or the player structure. The grid will maintain a 2D array of the loaded grid. The player structure will maintain its real name, local name, gold collected, current location, and a grid object (containing the "visited" or visible spaces on the grid that the player has seen). 
+
 
 ### Pseudo code for logic/algorithmic flow
-
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> For example:
 
 The server will run as follows:
-
-	execute from a command line per the requirement spec
-	parse the command line, validate parameters
-	call initializeGame() to set up data structures
-	initialize the 'message' module
-	print the port number on which we wait
-	call message_loop(), to await clients
-	call gameOver() to inform all clients the game has ended
-	clean up
-
-
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
+```
+Parse and validate input from command line
+Load map onto display
+Randomly insert gold onto map in random amounts
+If the server gets a new client message:
+	make either new spectator or player
+While there is gold on the map:
+	update clients about player locations and game status as necessary
+Exit game, display scores
+```
 
 ### Major data structures
+#### Grid
+Maintains a 2D array of the loaded grid
+#### Player
+Contains the following data about players:
+1. real name
+2. local name
+3. gold collected
+4. current location
+5. grid object
 
-> Describe each major data structure in this program: what information does it represent, how does it represent the data, and what are its members.
-> This description should be independent of the programming language.
-> Mention, but do not describe, data structures implemented by other modules (such as the new modules you detail below, or any libcs50 data structures you plan to use).
+There will be getters and setters for each of these fields. Visibility will be implemented as a component of the player data structure, as it is necessary to update the grid object upon a player's movement. 
 
----
+## Division of labor 
+Brian --> Server, receiving & sending messages
+    
+Donia --> Player data structure, visibility  
 
-## XYZ module
+Ellie --> Client
 
-> Repeat this section for each module that is included in either the client or server.
-
-### Functional decomposition
-
-> List each of the main functions implemented by this module, with a phrase or sentence description of each.
-
-### Pseudo code for logic/algorithmic flow
-
-> For any non-trivial function, add a level-4 #### header and provide tab-indented pseudocode.
-> This pseudocode should be independent of the programming language.
-
-### Major data structures
-
-> Describe each major data structure in this module: what information does it represent, how does it represent the data, and what are its members.
-> This description should be independent of the programming language.
+Jeff --> Grid
+    
+#### All team members: 
+* major design and implementation decisions 
+* reviewing PRs on github 
+* testing for their own code 
+* communication ! 
