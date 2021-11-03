@@ -125,7 +125,10 @@ Exit game, display scores
 
 ### Major data structures
 #### Grid
-Maintains a 2D array of the loaded grid
+Maintains a 2D array of the loaded grid. Contains the following:
+1. grid string
+2. gold collected
+3. gold remaining
 #### Player
 Contains the following data about players:
 1. real name
