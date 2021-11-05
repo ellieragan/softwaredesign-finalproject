@@ -28,6 +28,7 @@ typedef struct player{
     tuple_t* currentPos; 
     int gold; 
     bool spectator; 
+    addr_t* socket; 
 } player_t; 
 
 typedef struct tuple{

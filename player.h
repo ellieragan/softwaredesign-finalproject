@@ -25,7 +25,7 @@ typedef struct tuple tuple_t; // TODO: this could also be defined in grid, which
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator); 
+player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket); 
 
 /**************** addGold ****************/
 /* Add gold to a player's gold count 
