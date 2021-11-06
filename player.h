@@ -157,3 +157,21 @@ bool getSpectatorStatus(player_t* player);
 * output: n/a
 */
 void setSpectatorStatus(player_t* player, bool spectator); 
+
+
+/**************** getSocketAddr ****************/
+/* get a player's socket address
+* 
+* input: player
+* output: pointer to the player's socket address
+*/
+addr_t* getSocketAddr(player_t* player); 
+
+
+/**************** setSocketAddr ****************/
+/* set a player's socket address
+* 
+* input: player and address of socket
+* output: n/a
+*/
+void setSocketAddr(player_t* player, addr_t* socketAddr); 

@@ -79,3 +79,9 @@ bool getSpectatorStatus(player_t* player) { return player->spectator; }
 
 /**************** setSpectatorStatus ****************/
 void setSpectatorStatus(player_t* player, bool spectator) { player->spectator = spectator; }
+
+/**************** getSocketAddr ****************/
+addr_t* getSocketAddr(player_t* player) { return player->socket; }
+
+/**************** setSocketAddr ****************/
+void setSocketAddr(player_t* player, addr_t* socketAddr) { player->socket = socketAddr; }
