@@ -51,7 +51,7 @@ grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers);
 * input: information about the player that moved and the spectator player object
 * output: the updated spectator grid 
 */
-grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator); 
+grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator, player_t** otherPlayers); 
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 

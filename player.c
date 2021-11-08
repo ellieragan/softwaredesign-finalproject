@@ -82,7 +82,7 @@ grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers)
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
     if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
         setCurrentPos(player, newPosition); 
-        grid_t* newPlayerGrid = updateGrid(getGrid(player), newPosition, otherPlayers); 
+        grid_t* newPlayerGrid = updateGrid(getGrid(player), newPosition, otherPlayers);  // TODO: write in grid.c
         setGrid(player, newPlayerGrid); 
         return newPlayerGrid; 
     } else {
@@ -93,11 +93,11 @@ grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers)
 }
 
 /**************** updateSpectator ****************/
-grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator)
+grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator, player_t** otherPlayers)
 {
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
-    if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
-        grid_t* newSpecGrid = updateSpectatorGrid(getGrid(spectator), getID(player), newPosition); 
+    if (checkValidMove(grid, newPosition, otherPlayers)) {
+        grid_t* newSpecGrid = updateSpectatorGrid(getGrid(spectator), getID(player), newPosition); // TODO: write in grid.c
         setGrid(spectator, newSpecGrid); 
         return newSpecGrid; 
     } else {
@@ -108,8 +108,13 @@ grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator)
 } 
 
 /**************** checkValidMove ****************/
-bool checkValidMove(grid_t* grid, tuple_t* position, tuple_t* newPosition)
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** otherPlayers)
 {
+    // validate within bounds 
+
+    // validate not a wall
+
+    // validate no other player is there
 
 }
 
