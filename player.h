@@ -41,7 +41,7 @@ int addGold(player_t* player, int goldCollected, int* remainingGold);
 * input: player who moved, the key they pressed, and a list of the other players in the game
 * output: the updated grid of the player's viewed maze 
 */
-grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers); 
+grid_t* movePlayer(player_t* player, int direction, player_t** otherPlayers); 
 
 /**************** updateSpectator ****************/
 /* Update the grid of the spectator, with each player movement 
@@ -49,7 +49,7 @@ grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers);
 * input: information about the player that moved and the spectator player object
 * output: the updated spectator grid 
 */
-grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator); 
+grid_t* updateSpectator(player_t* player, int direction, player_t* spectator); 
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 

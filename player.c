@@ -28,7 +28,7 @@ typedef struct player{
     tuple_t* currentPos; 
     int gold; 
     bool spectator; 
-    addr_t* socket; 
+    addr_t socket; 
 } player_t; 
 
 typedef struct tuple{
@@ -48,12 +48,26 @@ typedef struct tuple{
 /**************** initPlayer ****************/
 player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket)
 {
-    if (realName == NULL || ID == NULL || grid == NULL || currentPos == NULL || socket == NULL) {
+    // validate inputs aren't null
+    if (realName == NULL || ID == NULL || grid == NULL || currentPos == NULL || spectator == NULL || socket == NULL) {
         return NULL; 
     }
-
     
+    // allocate space and set instance variables
+    player_t* player = mem_malloc(sizeof(player_t));
+    setRealName(player, realName); 
+    setID(player, ID); 
+    setGrid(player, grid); 
+    setCurrentPos(player, currentPos); 
+    setSpectatorStatus(spectator); 
+    setSocketAddr(socket); 
 
+    // check everything was initialized correctly 
+    if (getRealName(player) == NULL || getID(player) == NULL || getGrid(player) == NULL || getCurrentPos(player) == NULL || getSpectatorStatus(player) == NULL || getSocketAddr(player) == NULL ) {
+        return NULL; 
+    } 
+
+    return player; 
 }
 
 /**************** addGold ****************/
@@ -66,16 +80,80 @@ int addGold(player_t* player, int goldCollected, int* remainingGold)
 }
 
 /**************** movePlayer ****************/
-grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers)
+grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers)
 {
 
 }
 
 /**************** updateSpectator ****************/
-grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator)
+grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator)
 {
     
 } 
+
+/**************** parseKeyPressed ****************/
+/* output key: 
+* 0 --> up
+* 1 --> right 
+* 2 --> down
+* 3 --> left
+
+* 4 --> 
+* 5 --> 
+* 6 --> 
+* 7 --> 
+* 
+* 
+*/
+int determineDirection(char keyPressed)
+{
+    switch(keyPressed) {
+        case ('k') // up 
+
+        case('l') // right 
+
+        case('j') // down
+
+        case ('h') // left 
+
+
+        case ('y') // diagonally up & left
+
+        case('u') // diagonally up & right 
+
+        case('b') // diagonally down & left
+
+        case ('n') // diagonally down & right  
+    }
+}
+
+/**************** checkValidMove ****************/
+bool checkValidMove(grid_t* grid, tuple_t* position, int direction)
+{
+
+}
+
+
+/**************** deletePlayer ****************/
+void deletePlayer(player_t* player)
+{
+    if (player != NULL) {
+        if (getRealName(player) != NULL) {
+            mem_free(player->realName); 
+        }
+
+        if (getID(player) != NULL) {
+            mem_free(player->ID); 
+        }
+
+        if (getGrid(player) != NULL) {
+            delete(player->grid); 
+        }
+
+        // TODO: only question is whether or not we need to delete/free the tuple
+
+    }
+}
 
 /**************** getRealName ****************/
 char* getRealName(player_t* player) { return player->realName; }
@@ -92,8 +170,8 @@ void setID(player_t* player, char* ID) { player->ID = ID; }
 /**************** getGrid ****************/
 grid_t* getGrid(player_t* player) { return player->grid; }
 
-/**************** getGrid ****************/
-void getGrid(player_t* player, grid_t* grid) { player->grid = grid; }
+/**************** setGrid ****************/
+void setGrid(player_t* player, grid_t* grid) { player->grid = grid; }
 
 /**************** getCurrentPos ****************/
 tuple_t* getCurrentPos(player_t* player) { return player->currentPosition; }
@@ -114,7 +192,7 @@ bool getSpectatorStatus(player_t* player) { return player->spectator; }
 void setSpectatorStatus(player_t* player, bool spectator) { player->spectator = spectator; }
 
 /**************** getSocketAddr ****************/
-addr_t* getSocketAddr(player_t* player) { return player->socket; }
+addr_t getSocketAddr(player_t* player) { return player->socket; }
 
 /**************** setSocketAddr ****************/
-void setSocketAddr(player_t* player, addr_t* socketAddr) { player->socket = socketAddr; }
+void setSocketAddr(player_t* player, addr_t socketAddr) { player->socket = socketAddr; }
