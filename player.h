@@ -12,10 +12,12 @@
 #include <string.h>
 #include <stdbool.h> 
 // #include "grid.h"
+#include "tuple.h"
+#include "libcs50/mem.h"
+
 
 /**************** global types ****************/
 typedef struct player player_t; // opaque to users of the module 
-typedef struct tuple tuple_t; // TODO: this could also be defined in grid, which might make more sense 
 
 /**************** functions ****************/
 
@@ -41,7 +43,7 @@ int addGold(player_t* player, int goldCollected, int* remainingGold);
 * input: player who moved, the key they pressed, and a list of the other players in the game
 * output: the updated grid of the player's viewed maze 
 */
-grid_t* movePlayer(player_t* player, int direction, player_t** otherPlayers); 
+grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers); 
 
 /**************** updateSpectator ****************/
 /* Update the grid of the spectator, with each player movement 
@@ -49,7 +51,7 @@ grid_t* movePlayer(player_t* player, int direction, player_t** otherPlayers);
 * input: information about the player that moved and the spectator player object
 * output: the updated spectator grid 
 */
-grid_t* updateSpectator(player_t* player, int direction, player_t* spectator); 
+grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator); 
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 

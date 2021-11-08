@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "tuple.h"
+#include "libcs50/mem.h"
 // #include "grid.h"
 
 /**************** file-local global variables ****************/
@@ -30,11 +32,6 @@ typedef struct player{
     bool spectator; 
     addr_t socket; 
 } player_t; 
-
-typedef struct tuple{
-    int x; 
-    int y; 
-} tuple_t; 
 
 /**************** global functions ****************/
 /* that is, visible outside this file */
@@ -82,57 +79,80 @@ int addGold(player_t* player, int goldCollected, int* remainingGold)
 /**************** movePlayer ****************/
 grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers)
 {
+    tuple_t* newPosition = determineNewPosition(player, keyPressed); 
+    if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
+        setCurrentPos(player, newPosition); 
+        grid_t* newPlayerGrid = updateGrid(getGrid(player), newPosition, otherPlayers); 
+        setGrid(player, newPlayerGrid); 
+        return newPlayerGrid; 
+    } else {
+        // TODO: what to return if the player inputs an invalid move?
+        return NULL; 
+    }
 
 }
 
 /**************** updateSpectator ****************/
 grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator)
 {
+    tuple_t* newPosition = determineNewPosition(player, keyPressed); 
+    if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
+        grid_t* newSpecGrid = updateSpectatorGrid(getGrid(spectator), getID(player), newPosition); 
+        setGrid(spectator, newSpecGrid); 
+        return newSpecGrid; 
+    } else {
+        // TODO: what to return if the player inputs an invalid move?
+        return NULL; 
+    }
     
 } 
 
-/**************** parseKeyPressed ****************/
-/* output key: 
-* 0 --> up
-* 1 --> right 
-* 2 --> down
-* 3 --> left
-
-* 4 --> 
-* 5 --> 
-* 6 --> 
-* 7 --> 
-* 
-* 
-*/
-int determineDirection(char keyPressed)
-{
-    switch(keyPressed) {
-        case ('k') // up 
-
-        case('l') // right 
-
-        case('j') // down
-
-        case ('h') // left 
-
-
-        case ('y') // diagonally up & left
-
-        case('u') // diagonally up & right 
-
-        case('b') // diagonally down & left
-
-        case ('n') // diagonally down & right  
-    }
-}
-
 /**************** checkValidMove ****************/
-bool checkValidMove(grid_t* grid, tuple_t* position, int direction)
+bool checkValidMove(grid_t* grid, tuple_t* position, tuple_t* newPosition)
 {
 
 }
 
+/**************** determineNewPosition ****************/
+tuple_t* determineNewPosition(player_t* player, char keyPressed) 
+{
+    tuple_t* currentPosition = getCurrentPos(player); 
+    int x = tupleGetX(currentPosition); 
+    int y = tupleGetY(currentPosition); 
+
+    switch(keyPressed) { // assumes 0,0 is the top left corner
+        case ('k') : // up 
+            y -= 1;
+            break; 
+        case('l') : // right 
+            x += 1; 
+            break; 
+        case('j') : // down
+            y += 1; 
+            break; 
+        case ('h') : // left 
+            x -= 1; 
+            break; 
+        case ('y') : // diagonally up & left
+            y -= 1; 
+            x -= 1; 
+            break; 
+        case('u') : // diagonally up & right 
+            y -= 1; 
+            x += 1; 
+            break; 
+        case('b') :  // diagonally down & left
+            y += 1; 
+            x -= 1; 
+            break; 
+        case ('n') : // diagonally down & right  
+            y += 1; 
+            x += 1; 
+            break; 
+    }
+
+    return initTuple(x, y); 
+}
 
 /**************** deletePlayer ****************/
 void deletePlayer(player_t* player)
@@ -154,6 +174,9 @@ void deletePlayer(player_t* player)
 
     }
 }
+
+
+/**************** getters & setters ****************/
 
 /**************** getRealName ****************/
 char* getRealName(player_t* player) { return player->realName; }

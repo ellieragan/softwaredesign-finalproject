@@ -314,7 +314,7 @@ void buildPiles(int seed, grid_t* playerGrid);
 int updateGoldCount(grid_t* playerGrid, int goldDecrease, tuple_t* location);
 void updateVisibility(grid_t* playerGrid, tuple_t* location);
 void delete(grid_t* playerGrid);
-grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char* playerID, tuple_t* newLocation); 
+grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char playerID, tuple_t* newLocation); 
 ```
 ### Detailed pseudo code
 #### `grid_new`
