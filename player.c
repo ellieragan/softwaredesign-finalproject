@@ -44,6 +44,39 @@ typedef struct tuple{
 /* not visible outside this file */
 // TODO: init here as necessary 
 
+
+/**************** initPlayer ****************/
+player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket)
+{
+    if (realName == NULL || ID == NULL || grid == NULL || currentPos == NULL || socket == NULL) {
+        return NULL; 
+    }
+
+    
+
+}
+
+/**************** addGold ****************/
+int addGold(player_t* player, int goldCollected, int* remainingGold)
+{
+    int currGold = getGold(player); 
+    setGold(player, currGold + goldCollected); 
+    *remainingGold -= goldCollected; 
+    return *remainingGold; 
+}
+
+/**************** movePlayer ****************/
+grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers)
+{
+
+}
+
+/**************** updateSpectator ****************/
+grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator)
+{
+    
+} 
+
 /**************** getRealName ****************/
 char* getRealName(player_t* player) { return player->realName; }
 
