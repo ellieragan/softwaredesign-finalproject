@@ -17,15 +17,38 @@
 // function declarations
 static void parseArgs(const int argc, char* argv[]);
 bool handleMsg(void* arg, const addr_t from, const char* message);
-bool handleTO(void* arg);
-bool handleStdin(void* arg);
+//bool handleTO(void* arg);
+//bool handleStdin(void* arg);
 
 int main(const int argc, char* argv[]){
   parseArgs(argc, argv);
 
   char* map = NULL;
-  char* seed = NULL;
+  int seed = NULL;
 
+  if (argc == 2){
+    map = argv[1];
+  }
+  else if (argc == 3){
+    map = argv[1];
+    seed = atoi(argv[2]);
+  }
+  
+  // masterGrid holds total amount of gold
+  grid_t* masterGrid = grid_new(map, seed);
+
+  // players stores all player structs
+  int maxPlayers = 26;
+  player_t** players = calloc(maxPlayers+1,sizeof(player_t*)); // include spectator
+
+  // helps pass 2 things into arg of message_loop
+  hashtable_t* args = hashtable_new(2);
+  hashtable_insert(args, "masterGrid", masterGrid);
+  hashtable_insert(args, "players", players);
+
+  message_init(stderr);
+  message_loop(args, 0, NULL, NULL, handleMsg);
+  message_done();
 }
 
 /* parseArgs
@@ -63,3 +86,9 @@ static void parseArgs(const int argc, char* argv[]){
     }
   }
 }
+
+/* handleMsg
+ * Runs when server receives message
+ */
+bool handleMsg(void* arg, const addr_t from, const char* message){
+  
