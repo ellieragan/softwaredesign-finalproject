@@ -127,7 +127,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       char* playerID = getID(playerIndex);
 
       // initialize player and place into players array
-      players[playerIndex] = initPlayer(processName(msgRest),playerID,masterGrid,currentpos,false,from); // clarify input with donia
+      players[playerIndex] = initPlayer(processName(msgRest),playerID,masterGrid,NULL,from);
       
       // construct and send OK message to client
       char okMsg[6]; // OK + space + ID + \0 + extra char
@@ -158,8 +158,82 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
   }
   if (strcmp(msgType, "SPECTATE")){ // SPECTATE type messages
+    if (spectator != NULL){ // replace existing spectator with new one
+      message_send(getSocketAddr(spectator),"QUIT You have been replaced by a new spectator.");
+      deletePlayer(spectator);
+      spectator = initPlayer(".",".",masterGrid,players,from);
+    }
+    if (spectator == NULL){ // just create new player
+      spectator = initPlayer(".",".",masterGrid,players,from);
+    }
+    
+    // construct and send GRID message to client
+    int nrows = getRows(getGrid(players[playerIndex]));
+    int ncols = getCols(getGrid(players[playerIndex]));
+
+    char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
+    sprintf(gridMsg,"GRID %d %d",nrows,ncols);
+    message_send(from, &gridMsg);
+
+    // construct and send GOLD message to clients
+    int remain = getGoldLeft(masterGrid);
+
+    char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
+    sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
+    message_send(from, &goldMsg);
+
+    // construct and send DISPLAY message to clients
+    char* displayStr = getDisplay(spectator); // ask donia about this
+
+    char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
+    sprintf(displayMsg, "DISPLAY\n%s", displayStr);
+    message_send(from, &displayMsg);
   }
+
   if (strcmp(msgType, "KEY")){ // KEY type messages
+    // find player in question
+    player_t* player;
+    int pos;
+    for (pos = 0; pos < maxPlayers; pos++){
+      if (getSocketAddr(players[pos]) == from){
+        player = players[pos];
+      }
+    }
+
+    // if client is player
+    if (from != getSocketAddr(spectator)){ // if not spectator
+      // if key is valid
+      if (validKey(&msgRest,false)){
+        // if it is a movement key
+        if (strcmp(msgRest,"Q")!=0){
+          movePlayer(player,msgRest,players);
+        }
+        // if not movement key, must be Q
+        else{
+          message_send(from,"QUIT Thanks for playing!");
+          deletePlayer(player);
+        }
+      }
+      // if not valid key
+      else{
+        message_send(from,"ERROR Invalid key for player client.");
+      }
+    }
+    // if client is spectator
+    else{
+      // if key is valid
+      if (validKey(&msgRest,true)){
+        // only possible key is Q
+        if (strcmp(msgRest,"Q") == 0){
+          message_send(from,"QUIT Thanks for watching!");
+          deletePlayer(spectator);
+        }
+      }
+      // if not valid key
+      else{
+        message_send(from,"ERROR Invalid key for spectator client.");
+      }
+    }
   }
 }
 
@@ -246,4 +320,32 @@ static char* getID(int playerIndex){
     ID++;
   }
   return &ID;
+}
+
+/* validKey
+ * Helper function for handleMsg
+ * Tests whether key is a valid key
+ */
+static bool validKey(char key, bool spectator){
+  // if is spectator; only valid key is Q
+  if (spectator){
+    if (key != "Q"){
+      return false;
+    }
+    else{
+      return true;
+    }
+  }
+  // if is player
+  else{
+    bool valid = false;
+    char validKeys[17] = {"Q","h","H","l","L","j","J","k","K","y","Y","u","U","b","B","n","N"};
+    int index;
+    for (index = 0; index < 17; index++){
+      if (key == validKeys[index]){
+        valid = true;
+      }
+    }
+    return valid;
+  }
 }
