@@ -219,8 +219,8 @@ The other functions within the data structure are as follows:
 ```c=
 void initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator); 
 int addGold(player_t* player, int goldCollected, int*) remainingGold);
-grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers); 
-grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator)
+grid_t* movePlayer(player_t* player, grid_t* masterGrid, char* keyPressed, player_t** players); 
+grid_t* updateSpectator(player_t* player, grid_t* masterGrid, char* keyPressed, player_t* spectator, player** players)
 void deletePlayer(player_t* player); 
 ```
 
