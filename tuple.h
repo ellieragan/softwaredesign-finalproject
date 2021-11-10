@@ -34,3 +34,6 @@ void tupleSetx(tuple_t* tuple, int x);
 
 /*********** tupleSetY ***********/
 void tupleSetY(tuple_t* tuple, int y); 
+
+/*********** tupleEquals ***********/
+bool tupleEquals(tuple_t* a, tuple_t* b); 

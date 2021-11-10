@@ -1,7 +1,6 @@
 /*
 * player.c
 * Module for the player data structure 
-* 
 *
 * Team 7: Gitting an A
 * (Ellie Boyd, Jeffrey Liu, Brian Ng, Donia Tung)
@@ -30,6 +29,7 @@ typedef struct player{
     tuple_t* currentPos; 
     int gold; 
     bool spectator; 
+    player_t** otherPlayers; 
     addr_t socket; 
 } player_t; 
 
@@ -43,11 +43,24 @@ typedef struct player{
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket)
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, player_t** players, addr_t socket)
 {
     // validate inputs aren't null
-    if (realName == NULL || ID == NULL || grid == NULL || currentPos == NULL || spectator == NULL || socket == NULL) {
+    if (realName == NULL || ID == NULL || grid == NULL || socket == NULL) {
         return NULL; 
+    }
+
+    // TODO write positionInit
+    tuple_t* currentPos = positionInit(masterGrid); 
+
+    // TODO write playerGridInit
+    grid_t* grid = playerGridInit(masterGrid, currentPos); 
+
+    bool spectator; 
+    if (players == NULL) {
+        spectator = false; 
+    } else{
+        spectator = true; 
     }
     
     // allocate space and set instance variables
@@ -65,6 +78,22 @@ player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos
     } 
 
     return player; 
+}
+
+/**************** positionInit ****************/
+tuple_t* positionInit(grid_t* grid)
+{
+    int numRows = getRows(grid); 
+    int numCols = getCols(grid); 
+
+
+
+}
+
+/**************** playerGridInit ****************/
+grid_t* playerGridInit(grid_t* masterGrid, tuple_t* position)
+{
+
 }
 
 /**************** addGold ****************/
@@ -89,7 +118,6 @@ grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers)
         // TODO: what to return if the player inputs an invalid move?
         return NULL; 
     }
-
 }
 
 /**************** updateSpectator ****************/
@@ -97,25 +125,35 @@ grid_t* updateSpectator(player_t* player, char keyPressed, player_t* spectator, 
 {
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
     if (checkValidMove(grid, newPosition, otherPlayers)) {
-        grid_t* newSpecGrid = updateSpectatorGrid(getGrid(spectator), getID(player), newPosition); // TODO: write in grid.c
+        grid_t* newSpecGrid = updateSpectatorGrid(getGrid(spectator), getID(player), newPosition, getCurrentPos(player)); // TODO: write in grid.c
         setGrid(spectator, newSpecGrid); 
         return newSpecGrid; 
     } else {
         // TODO: what to return if the player inputs an invalid move?
         return NULL; 
-    }
-    
+    }  
 } 
 
 /**************** checkValidMove ****************/
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** otherPlayers)
 {
+    int x = tupleGetX(newPosition); 
+    int y = tupleGetY(newPosition); 
+
     // validate within bounds 
+    if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
 
     // validate not a wall
+    if (! isValidSpot(grid, newPosition)) { return false; }
 
     // validate no other player is there
-
+   for (int i = 0; i < 26; i++) {
+        player_t* otherPlayer = otherPlayers[i]
+        if (tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
+            return false; 
+        }
+    }
+    return true; 
 }
 
 /**************** determineNewPosition ****************/
@@ -179,6 +217,20 @@ void deletePlayer(player_t* player)
 
     }
 }
+
+/**************** helper methods that will go in grid ****************/
+bool isValidSpot(grid_t* grid, tuple_t* location) 
+{
+    int x = tupleGetX(location); 
+    int y = tupleGetY(location); 
+
+    return ((strcmp(grid[x][y], '#')) || (strcmp(grid[x][y], '.'))); 
+}
+
+grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
+{
+
+} 
 
 
 /**************** getters & setters ****************/

@@ -90,3 +90,9 @@ void tupleSetY(tuple_t* tuple, int y)
     tuple->y = y;
   }
 }
+
+/*********** tupleEquals ***********/
+bool tupleEquals(tuple_t* a, tuple_t* b) 
+{
+    return ((tupleGetX(a) == tupleGetX(b)) && (tupleGetY(a) == tupleGetY(b)) ) 
+}
