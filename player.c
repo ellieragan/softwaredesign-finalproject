@@ -29,7 +29,7 @@ typedef struct player{
     tuple_t* currentPos; 
     int gold; 
     bool spectator; 
-    player_t** otherPlayers; 
+    player_t** players; 
     addr_t socket; 
 } player_t; 
 
@@ -81,13 +81,27 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, player_t** pl
 }
 
 /**************** positionInit ****************/
-tuple_t* positionInit(grid_t* grid)
+tuple_t* positionInit(grid_t* grid, int seed)
 {
     int numRows = getRows(grid); 
     int numCols = getCols(grid); 
 
+    if (seed != NULL) {
+        srand(seed); 
+    } else {
+        srand(getpid()); 
+    }
 
+    int x = rand() % (numRows + 1); 
+    int y = rand() % (numCols + 1); 
 
+    tuple_t* tuple = initTuple(x, y); 
+    while (! isValidSpot(tuple)) {
+        int x = rand() % (numRows + 1); 
+        int y = rand() % (numCols + 1);
+        tuple = initTuple(x, y); 
+    }
+    return tuple; 
 }
 
 /**************** playerGridInit ****************/
@@ -270,6 +284,12 @@ bool getSpectatorStatus(player_t* player) { return player->spectator; }
 
 /**************** setSpectatorStatus ****************/
 void setSpectatorStatus(player_t* player, bool spectator) { player->spectator = spectator; }
+
+/**************** getPlayers ****************/
+bool getPlayers(player_t* player) { return player->players; }
+
+/**************** setPlayers ****************/
+void setPlayers(player_t* player, player_t** players) { player->players = players; }
 
 /**************** getSocketAddr ****************/
 addr_t getSocketAddr(player_t* player) { return player->socket; }
