@@ -5,7 +5,7 @@
  */
 
 #include <stdio.h>
-
+#include "support/message.h"
 /******** parseArgs ********/
 /* checks if message module can be initialized
  * checks for correct number of arguments
