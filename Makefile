@@ -7,8 +7,8 @@ S = ./support
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
 
-OBJS = client.o support/message.o
-LIBS = $L/libcs50.a #$C/common.a
+OBJS = client.o support/message.o support/log.o
+LIBS = $L/libcs50.a -lcurses -lm#$C/common.a
 
 .PHONY: all clean
 

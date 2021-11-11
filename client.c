@@ -59,7 +59,7 @@ int main(const int argc, char* argv[])
   }
 
   //ask server to join game as player/spectator
-  char* line;
+  char* line = NULL;
   if (isPlayer) {
       sprintf(line, "PLAY %s", playerName);
     //}
@@ -123,7 +123,7 @@ bool parseArgs(const int argc, char* argv[])
 static bool handleInput(void* arg) 
 {
   //use ncurses to make key input into something the server can deal with
-  char* message;
+  char* message = NULL;
   char c = getch();
     if (isPlayer) {
       if (c != EOF) {
@@ -205,12 +205,34 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY\n")) == 0) {
     const char* content = message + strlen("DISPLAY\n");
-    char* gridMap;
+    char* gridMap = NULL;
     sscanf(content, "DISPLAY\n%s", gridMap);
-    printw(gridMap);
+    printw("%s", gridMap);
+  }
+
+  else if (strncmp(message, "QUIT ", strlen("QUIT ")) == 0) {
+    const char* content = message + strlen("QUIT ");
+
+    endwin();
+    free(host);
+    free(port);
+    free(server);
+    message_done();
+
+    char* whyQuit = NULL;
+    sscanf(content, "QUIT %s", whyQuit);
+    printf("%s\n", whyQuit);
+
+    free(whyQuit);
+  }
+
+  else if (strncmp(message, "ERROR ", strlen("ERROR ")) == 0) {
+    const char* content = message + strlen("ERROR ");
+
+    char* error = NULL;
+    sscanf(content, "ERROR %s", error);
+    printw("%s\n", error);
   }
 
   return false;
 }
-
-
