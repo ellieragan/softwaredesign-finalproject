@@ -24,7 +24,7 @@ bool parseArgs(const int argc, char* argv[]);
 char* host;
 char* port;
 char* playerName;
-addr_t* server;
+addr_t server;
 bool isPlayer;
 //const int nrows;
 //const int ncols;
@@ -38,8 +38,14 @@ int main(const int argc, char* argv[])
 
   //assign variables
   host = argv[1];
+  printf("%s\n", host);
   port = argv[2];
-  server = malloc(sizeof(addr_t));
+  printf("%s\n", port);
+  playerName = argv[3];
+  printf("%s\n", playerName);
+  //if (!message_setAddr(host, port, server)) {
+    //fprintf
+  //server = malloc(sizeof(addr_t));
 
   //initialize message_init
   //if (message_init(stderr) == 0) {
@@ -53,13 +59,23 @@ int main(const int argc, char* argv[])
 
   //validate server address
   //addr_t* server;
-  if (!message_setAddr(host, port, server)) {
-    fprintf(stderr, "bad hostname/pot\n");
+  if (!message_setAddr(host, port, &server)) {
+    fprintf(stderr, "bad hostname/port\n");
     exit(1);
   }
 
+  int stringLength; 
   //ask server to join game as player/spectator
-  char* line = NULL;
+  if (playerName != NULL) {
+    stringLength = (5 + strlen(playerName));
+  }
+
+  else {
+    stringLength = 9;
+  }
+
+    char line[stringLength];
+
   if (isPlayer) {
       sprintf(line, "PLAY %s", playerName);
     //}
@@ -72,7 +88,8 @@ int main(const int argc, char* argv[])
     sprintf(line, "SPECTATE");
   }
     
-  message_send(*server, line);
+  message_send(server, line);
+  //free(line);
 
   //initialize ncurses
   initscr(); //screen
@@ -90,6 +107,7 @@ int main(const int argc, char* argv[])
 
   bool ok = message_loop(&server, 0, NULL, handleInput, handleMessage);
   message_done();
+  //free(*server);
   return ok? 0 : 1;
 
 }
@@ -101,11 +119,13 @@ bool parseArgs(const int argc, char* argv[])
   //check if message module can be initialized
   if (message_init(stderr) == 0) {
     fprintf(stderr, "failure to initialize message module\n");
+    //free(server);
     exit(1);
   }
 
   //check for correct number of arguments
   if (argc < 3 || argc > 4) {
+    //free(server);
     fprintf(stderr, "client takes two (or three) arguments\n");
     exit(1);
   }
@@ -138,7 +158,7 @@ static bool handleInput(void* arg)
         message = "KEY Q";
       }
     }
-    message_send(*server, message);
+    message_send(server, message);
 
   //while ((c
     //switch(c) {
@@ -181,7 +201,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     }
 
     else {
-      printw("screen size too small for grid!\n");
+      printw("screen size too small for grid!");
 
       while (tooSmall) {
 
@@ -216,8 +236,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     endwin();
     free(host);
     free(port);
-    free(server);
-    message_done();
+    //free(server);
+    //message_done();
 
     char* whyQuit = NULL;
     sscanf(content, "QUIT %s", whyQuit);
