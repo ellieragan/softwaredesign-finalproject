@@ -26,6 +26,7 @@ typedef struct player{
     char* realName; 
     char* ID; 
     grid_t* grid; 
+    char* visibility; 
     tuple_t* currentPos; 
     int gold; 
     bool spectator; 
@@ -121,13 +122,12 @@ int addGold(player_t* player, int goldCollected, int* remainingGold)
 }
 
 /**************** movePlayer ****************/
-grid_t* movePlayer(player_t* player, grid_t* masterGrid, char keyPressed, player_t** players)
+void movePlayer(player_t* player, grid_t* masterGrid, char keyPressed, player_t** players)
 {
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
     if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
         updateGrid(getGrid(player), masterGrid, getCurrentPos(player), newPosition, players);  // TODO: write in grid.c
         setCurrentPos(player, newPosition); 
-        return getGrid(player); 
     } else {
         // TODO: what to return if the player inputs an invalid move?
         return NULL; 
@@ -166,6 +166,7 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
             return false; 
         }
     }
+    // would return an index
     return true; 
 }
 
