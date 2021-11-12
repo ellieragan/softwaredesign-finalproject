@@ -29,6 +29,7 @@ bool isPlayer;
 //const int nrows;
 //const int ncols;
 int ry, rx;
+const char* gold;
 
 
 int main(const int argc, char* argv[])
@@ -102,10 +103,6 @@ int main(const int argc, char* argv[])
   start_color();
   init_pair(1, COLOR_RED, COLOR_BLACK);
   attron(COLOR_PAIR(1));
-  //attroff(COLOR_PAIR(1));
-  //int ly, lx; //upper left corner
-  //getbegyx(stdscr, ly, lx);
-  //int ry, rx; //lower right corner
   getmaxyx(stdscr, ry, rx);
   refresh();
 
@@ -189,10 +186,14 @@ static bool handleInput(void* arg)
 }
 
 static bool handleMessage(void* arg, const addr_t from, const char* message) {
+  int has, received, unclaimed;
+  char* player = malloc(2);
+
+  //const char* gold = NULL;
+
   if (strncmp(message, "OK ", strlen("OK ")) == 0) {
-    ;
-    //const char* content = message + strlen("OK ");
-    //do something with content???
+    scanf("OK %c", player);
+    //player = message + strlen("OK ");
   } 
 
   else if (strncmp(message, "GRID ", strlen("GRID ")) == 0) {
@@ -231,16 +232,38 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   }
 
   else if (strncmp(message, "GOLD ", strlen("GOLD ")) == 0) {
+    received = 0;
+    has = 0;
+    unclaimed = 0;
+
     const char* content = message + strlen("GOLD ");
-    printw("%s\n", content);
+    //printw("%s\n", content);
+    //gold = message + strlen("GOLD ");
+    //refresh();
+    //
+    sscanf(content, "%d %d %d", &received, &has, &unclaimed);
     refresh();
+
   }
 
   else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY\n")) == 0) {
     const char* content = message + strlen("DISPLAY\n");
-    //char* gridMap = NULL;
-    //sscanf(content, "%s", gridMap);
-    printf("\nhandled correctly\n");
+
+    clear();
+
+    //if (isPlayer) {
+      //if (received > 0) {
+        //printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", player, has, unclaimed, received);
+        //printw("%s/n%s", gold, content);
+      //}
+      //else {
+        //printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", player, has, unclaimed);
+      //}
+    //}
+    //else {
+      //printw("Spectator: %d nuggets unclaimed).\n", unclaimed);
+    //}
+
     printw("%s", content);
     refresh();
   }
