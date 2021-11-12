@@ -5,6 +5,7 @@
 */
 
 
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -12,23 +13,10 @@
 #include <math.h>
 #include <assert.h>
 #include "file.h"
-#include "grid.h"
-
-static const char room = '.';
-static const char pile = '*';
-
-static const int minGold = 10;
-static const int maxGold = 30;
-static const int totalGold = 250;
-static const int maxPlayers = 26;
-
-static const int vis = 1; 
-static const int alrVis = 2;
-static const int notVis = 3;
 
 
 
-typdef struct grid grid_t
+typedef struct grid
 {
     char* filemap;
     int rows;
@@ -36,6 +24,43 @@ typdef struct grid grid_t
     int goldPiles;
     int goldLeft;
 } grid_t;
+
+static const char room = '.';
+static const char pile = '*';
+
+static const int minGold = 10;
+static const int maxGold = 30;
+static const int totalGold = 250;
+//static const int maxPlayers = 26;
+
+static const int vis = 1; 
+static const int alrVis = 2;
+static const int notVis = 3;
+
+
+grid_t* grid_new(char* filename, int seed);
+grid_t* grid_newHelper(char* fileMap, int rows, int cols);
+char* getFileMap(grid_t* masterGrid);
+int getRows(grid_t* masterGrid);
+int getCols(grid_t* masterGrid);
+int getNumPiles(grid_t* masterGrid);
+int getGoldLeft(grid_t* masterGrid);
+void buildPiles(int seed, grid_t* masterGrid);
+int updateGoldCount(grid_t* masterGrid, int goldDecrease, int rowCord, int colCord);
+void buildUpdatedVisibility(char* updatedVis);
+char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
+bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
+bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
+float slopeCalc(int r, int c, int row, int col);
+float interceptCalc(int r, int c, float slope);
+bool validSpot(grid_t* masterGrid, int row, int col);
+void delete(grid_t* masterGrid);
+char* charConvertIndex(grid_t* masterGrid, char** gridMap);
+int charConvertIndexNum(grid_t* masterGrid, int row, int col);
+char* initializeVisibility(grid_t* masterGrid, int row, int col);
+
+
+
 
 /*
 * Reads the input map from the server module and the seed to create the map. Sets
@@ -56,7 +81,7 @@ grid_t* grid_new(char* filename, int seed)
     {
         rowNum = file_numLines(fp);
         char* cols = file_readLine(fp);
-        colNum = strlen(cols);
+        colNum = strlen(cols) + 1;
         free(cols);
         fclose(fp);
     }
@@ -78,26 +103,31 @@ grid_t* grid_new(char* filename, int seed)
     fclose(fp);
     start[totalCount] = '\0';
 
-    char* fileMapHold = malloc((rowNum * colNum + 10) * sizeof(char));
-    if(fileMapHold != NULL)
-    {
-        strcpy(fileMapHold, start);        
-    }
+    grid_t* masterGrid = grid_newHelper(start, rowNum, colNum);
+    buildPiles(seed, masterGrid);
 
-    grid_t* grid = grid_newHelper(fileMapHold, rowNum, colNum);
-    buildPiles(seed, grid);
+    return masterGrid;
 }
 
 /*
+*
+*
+*
 */
 grid_t* grid_newHelper(char* fileMap, int rows, int cols)
 {
+    char* fileMapHold = malloc((rows * cols + 10) * sizeof(char));
+    if(fileMapHold != NULL)
+    {
+        strcpy(fileMapHold, fileMap);        
+    }
+
     grid_t* mapGrid = malloc(sizeof(grid_t));
     if(mapGrid != NULL)
     {
         mapGrid -> filemap = fileMapHold; 
-        mapGrid -> rows = rowNum;
-        mapGrid -> cols = colNum; 
+        mapGrid -> rows = rows;
+        mapGrid -> cols = cols; 
     }
     return mapGrid;
 }
@@ -109,14 +139,14 @@ grid_t* grid_newHelper(char* fileMap, int rows, int cols)
 * Output: if found, a map's string 
 *
 */
-char* getFileMap(grid_t* playerGrid)
+char* getFileMap(grid_t* masterGrid)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
-        char* fileMap = playerGrid -> filemap;
+        char* fileMap = masterGrid -> filemap;
         return fileMap;
     }
-    return; 
+    return NULL; 
 }
 
 /*
@@ -125,14 +155,14 @@ char* getFileMap(grid_t* playerGrid)
 * Inputs: a player's grid
 * Output: if found, a map's row count
 */
-int getRows(grid_t* playerGrid)
+int getRows(grid_t* masterGrid)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
-        int rows = playerGrid -> rows;
+        int rows = masterGrid -> rows;
         return rows;
     }
-    return; 
+    return -1; 
     
 }
 
@@ -142,14 +172,14 @@ int getRows(grid_t* playerGrid)
 * Inputs: a player's grid
 * Output: if found, a map's column count
 */
-int getCols(grid_t* playerGrid)
+int getCols(grid_t* masterGrid)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
-        int cols = playerGrid -> cols;  
+        int cols = masterGrid -> cols;  
         return cols;
     }
-    return; 
+    return -1; 
 }
 
 /*
@@ -158,14 +188,14 @@ int getCols(grid_t* playerGrid)
 * Inputs: a player's grid
 * Output: if found, a map's gold pile count
 */
-int getNumPiles(grid_t* playerGrid)
+int getNumPiles(grid_t* masterGrid)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
-        int numPiles = playerGrid -> goldPiles;
+        int numPiles = masterGrid -> goldPiles;
         return numPiles;
     }
-    return;
+    return -1; 
     
 }
 
@@ -175,14 +205,14 @@ int getNumPiles(grid_t* playerGrid)
 * Inputs: a player's grid
 * Output: if found, the count of the gold left in a map 
 */
-int getGoldLeft(grid_t* playerGrid)
+int getGoldLeft(grid_t* masterGrid)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
-        int goldLeft = playerGrid -> goldLeft;
+        int goldLeft = masterGrid -> goldLeft;
         return goldLeft;
     }
-    return;   
+    return -1; 
 }
 
 /*
@@ -192,25 +222,25 @@ int getGoldLeft(grid_t* playerGrid)
 * Inputs: a seed, a player's grid 
 * Output: N/A
 */
-void buildPiles(int seed, grid_t* playerGrid)
+void buildPiles(int seed, grid_t* masterGrid)
 {
     int piles = (int)(rand() % (maxGold - minGold + 1)) + minGold; 
 
-    grid -> goldPiles = piles; 
-    grid -> goldLeft = totalGold;
+    masterGrid -> goldPiles = piles; 
+    masterGrid -> goldLeft = totalGold;
 
     int i = 0;
     while(i < piles)
     {
-        int row = grid -> row;
-        int col = grid -> col; 
+        int row = masterGrid -> rows;
+        int col = masterGrid -> cols; 
         int randRow = (rand() % row) + 1;
         int randCol = (rand() % col) + 1;
 
         int index = (randRow - 1) * col + randCol - 1;
-        if (grid -> filemap[index] == room)
+        if (masterGrid -> filemap[index] == room)
         {
-            grid -> filemap[index] = pile;
+            masterGrid -> filemap[index] = pile;
             i++; 
         }
     }
@@ -224,26 +254,26 @@ void buildPiles(int seed, grid_t* playerGrid)
 * Inputs: a player's grid, the count 
 * Output: the amount of gold removed. 
 */
-int updateGoldCount(grid_t* playerGrid, int goldDecrease, int rowCord, int colCord)
+int updateGoldCount(grid_t* masterGrid, int goldDecrease, int rowCord, int colCord)
 {
-    if(playerGrid != NULL)
+    if(masterGrid != NULL)
     {
         int removeGold;
-        if(playerGrid -> goldPiles == 1)
+        if(masterGrid -> goldPiles == 1)
         {
-            removeGold = playerGrid -> goldLeft; 
+            removeGold = masterGrid -> goldLeft; 
         }
         else
         {
-            removeGold = (int) (rand() % (2* (playerGrid -> goldLeft/playerGrid -> goldPiles) - playerGrid-> goldPiles + 1)); 
+            removeGold = (int) (rand() % (2* (masterGrid -> goldLeft/masterGrid -> goldPiles) - masterGrid-> goldPiles + 1)); 
         }
 
-        int index = (rowCord - 1) * playerGrid -> col + colCord - 1;
-        playerGrid -> filemap[index] = room; 
-        if(playerGrid -> goldPiles >= 1 && playerGrid -> goldLeft >= removeGold)
+        int index = (rowCord - 1) * masterGrid -> cols + colCord - 1;
+        masterGrid -> filemap[index] = room; 
+        if(masterGrid -> goldPiles >= 1 && masterGrid -> goldLeft >= removeGold)
         {
-            playerGrid -> goldLeft = playerGrid -> goldLeft - removeGold;
-            playerGrid -> goldPiles --; 
+            masterGrid -> goldLeft = masterGrid -> goldLeft - removeGold;
+            masterGrid -> goldPiles --; 
             return removeGold; 
         }
     }
@@ -251,14 +281,17 @@ int updateGoldCount(grid_t* playerGrid, int goldDecrease, int rowCord, int colCo
 }
 
 /*
+* Constructs the updated visibility array that converts visible items into
+* memory for reference.
 *
+* Inputs: an empty updatedVis array, the current visibility array
+* Output: N/a
 */
-void buildUpdatedVisibility(char* updatedVis, char* currentVis)
+void buildUpdatedVisibility(char* updatedVis)
 {
-    strpy(updatedVis, currentVis);
     for(int i = 0; i < strlen(updatedVis); i++)
     {
-        if(updatedVis[i] = vis)
+        if(updatedVis[i] == vis)
         {
             updatedVis[i] = alrVis;
         }
@@ -273,23 +306,25 @@ void buildUpdatedVisibility(char* updatedVis, char* currentVis)
 * Output: N/A
 *
 */
-char* updateVisibility(grid_t* playerGrid, int rowCord, int colCord, char* visibility)
+char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility)
 {
-    char* updatedVis;
-    buildUpdatedVisibility(updatedVis, visibility);
+    char* updatedVis = malloc(strlen(visibility) + 1);
+    strcpy(updatedVis, visibility);
 
-    if(playerGrid != NULL)
+    buildUpdatedVisibility(updatedVis);
+
+    if(masterGrid != NULL)
     {
-        for(int r = 1; r < playerGrid -> rows; r++)
+        for(int r = 1; r < masterGrid -> rows; r++)
         {
-            for(int c = 1; c < playerGrid -> cols; c++)
+            for(int c = 1; c < masterGrid -> cols; c++)
             {
-                float slope = slopeCalc(r, c, rows, cols);
+                float slope = slopeCalc(r, c, rowCord, colCord);
                 float intercept = interceptCalc(r, c, slope);
-                int index = (r - 1) * playerGrid -> col + c - 1;
+                int index = (r - 1) * masterGrid -> cols + c - 1;
                 bool visible;
-                visible = rowCheck(r, c, row, col, slope, intercept, playerGrid); 
-                visible = colCheck(r, c, row, col, slope, intercept, playerGrid);
+                visible = rowCheck(r, c, rowCord, colCord, slope, intercept, masterGrid); 
+                visible = colCheck(r, c, rowCord, colCord, slope, intercept, masterGrid);
 
                 if(visible)
                 {
@@ -307,8 +342,12 @@ char* updateVisibility(grid_t* playerGrid, int rowCord, int colCord, char* visib
  
 
 /*
+*
+*
+*
+*
 */
-bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* playerGrid)
+bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid)
 {
     int ctemp = c; 
     while(ctemp != col) //Iterates until reaches grid's column 
@@ -326,26 +365,26 @@ bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid
             }
             int low = (int) curRow;
             int high = (int) ceil(curRow);
-            if(!validSpot(grid, ctemp, high) && !validSpot(grid, ctemp, low))
+            if(!validSpot(masterGrid, ctemp, high) && !validSpot(masterGrid, ctemp, low))
             {
                 return false; 
             }
         }
         if(ctemp <= col)
         {
-            rtemp++; 
+            ctemp++; 
         }
         else
         {
-            rtemp--; 
+            ctemp--; 
         }
     }
-    return false;
+    return true;
 }
 
 /*
 */
-bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* playerGrid)
+bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid)
 {
     int rtemp = r; 
     while(rtemp != row)
@@ -363,7 +402,7 @@ bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid
             }
             int low = (int) curCol;
             int high = (int) ceil(curCol);
-            if(!validSpot(grid, high, rtemp) && !validSpot(grid, low, rtemp))
+            if(!validSpot(masterGrid, high, rtemp) && !validSpot(masterGrid, low, rtemp))
             {
                 return false; 
             }
@@ -377,7 +416,7 @@ bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid
             rtemp--; 
         }
     }
-    return false;
+    return true;
 }
 
 
@@ -393,15 +432,15 @@ float slopeCalc(int r, int c, int row, int col)
 */
 float interceptCalc(int r, int c, float slope)
 {
-    float intercept = (float)r - (slope * (float)c);
+    float intercept = (float) ((float)(r - (slope * (float)c)));
     return intercept;
 }
 
 
-bool validSpot(grid_t* playerGrid, int row, int col)
+bool validSpot(grid_t* masterGrid, int row, int col)
 {
-    int index = (row - 1) * playerGrid -> cols + col - 1;
-    return (playerGrid -> filemap[index] == room || playerGrid -> filemap[index] == pile);
+    int index = (row - 1) * masterGrid -> cols + col - 1;
+    return (masterGrid -> filemap[index] == room || masterGrid -> filemap[index] == pile);
 }
 
 
@@ -411,16 +450,88 @@ bool validSpot(grid_t* playerGrid, int row, int col)
 * Inputs: a player's grid
 * Output: N/A
 */
-void delete(grid_t* playerGrid)
+void delete(grid_t* masterGrid)
 {
-    if(playerGrid != NULL && playerGrid -> filemap != NULL)
+    if(masterGrid != NULL && masterGrid -> filemap != NULL)
     {
-        free(playerGrid -> filemap);
-        free(playerGrid);
+        free(masterGrid -> filemap);
+        free(masterGrid);
     }
-    else if (playerGrid != NULL)
+    else if (masterGrid != NULL)
     {
-        free(playerGrid);
+        free(masterGrid);
     }
 }
 
+
+/*
+*/
+char* initializeVisibility(grid_t* masterGrid, int row, int col)
+{
+    char* temp = masterGrid -> filemap;
+    char* visibility;
+    visibility = malloc(strlen(temp) * sizeof(char) + 1);
+    if(visibility != NULL)
+    {
+        for(int i = 0; i < strlen(temp) + 1; i++)
+        {
+            if(i == strlen(temp))
+            {
+                visibility[i] = '\0';
+            }
+            else if(temp[i] != '\n')
+            {
+                visibility[i] = '\n';
+            }
+            else
+            {
+                visibility[i] = vis;
+            }
+        }
+        int index = (row - 1) * (masterGrid -> cols) + col -1;
+        visibility[index] = vis;
+        return visibility;
+    }
+    return NULL;
+}
+
+
+
+
+
+/*
+*
+*
+*
+*
+*/
+char* charConvertIndex(grid_t* masterGrid, char** gridMap)
+{
+    char* convertedIndex = malloc(strlen(masterGrid -> filemap));
+    if(masterGrid != NULL && gridMap != NULL)
+    {
+        for(int i = 0; i < masterGrid -> rows; i++)
+        {
+            for(int k = 0; k < masterGrid -> cols; k++)
+            {
+                int index = (masterGrid -> cols) * (i - 1) + (k -1);
+                convertedIndex[index] = gridMap[i][k];
+            }
+        }
+        return convertedIndex;
+    }
+    return NULL;
+}
+
+
+/*
+*
+*/
+int charConvertIndexNum(grid_t* masterGrid, int row, int col)
+{
+    if(masterGrid != NULL)
+    {
+        return (masterGrid -> cols) * (row - 1) + col -1;
+    }
+    return -1; 
+}
