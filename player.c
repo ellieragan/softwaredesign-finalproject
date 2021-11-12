@@ -25,56 +25,57 @@
 typedef struct player{
     char* realName; 
     char* ID; 
-    grid_t* grid; 
     char* visibility; 
     tuple_t* currentPos; 
     int gold; 
-    bool spectator; 
-    player_t** players; 
     addr_t socket; 
 } player_t; 
 
 /**************** global functions ****************/
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket); 
+void movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players); 
+void deletePlayer(player_t* player); 
+
 
 /**************** local functions ****************/
 /* not visible outside this file */
-// TODO: init here as necessary 
+tuple_t* getRandomPosition(grid_t* grid, int seed); 
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
+void addPlayerGold(player_t* player, int goldCollected); 
+tuple_t* determineNewPosition(player_t* player, char keyPressed); 
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, player_t** players, addr_t socket)
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket)
 {
     // validate inputs aren't null
     if (realName == NULL || ID == NULL || grid == NULL || socket == NULL) {
         return NULL; 
     }
 
-    // TODO write positionInit
-    tuple_t* currentPos = positionInit(masterGrid); 
+    // randomly select a position for the player
+    tuple_t* currentPos = getRandomPosition(masterGrid); 
 
-    // TODO write playerGridInit
-    grid_t* grid = playerGridInit(masterGrid, currentPos); 
+    // calculate player's visibility at that position 
+    char* visibility = initializeVisibility(masterGrid, tupleGetX(currentPos), tupleGetY(currentPos)); 
 
-    bool spectator; 
-    if (players == NULL) {
-        spectator = false; 
-    } else{
-        spectator = true; 
-    }
-    
+    // TODO - if we use local grids --> initialize player's local grid 
+
     // allocate space and set instance variables
     player_t* player = mem_malloc(sizeof(player_t));
     setRealName(player, realName); 
     setID(player, ID); 
-    setGrid(player, grid); 
+    // setGrid(player, grid); 
+    setVisibility(player, visibility);
     setCurrentPos(player, currentPos); 
-    setSpectatorStatus(spectator); 
+    // setSpectatorStatus(player, spectator); 
     setSocketAddr(socket); 
 
     // check everything was initialized correctly 
-    if (getRealName(player) == NULL || getID(player) == NULL || getGrid(player) == NULL || getCurrentPos(player) == NULL || getSpectatorStatus(player) == NULL || getSocketAddr(player) == NULL ) {
+    if (getRealName(player) == NULL || getID(player) == NULL ||  getVisibility(player) == NULL || 
+        getCurrentPos(player) == NULL || getSocketAddr(player) == NULL ) {
         return NULL; 
     } 
 
@@ -82,8 +83,8 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, player_t** pl
 }
 
 /**************** positionInit ****************/
-// TODO --> SHOULD GO IN SERVER
-tuple_t* positionInit(grid_t* grid, int seed)
+// TODO --> MOVE TO SERVER
+tuple_t* getRandomPosition(grid_t* grid, int seed)
 {
     int numRows = getRows(grid); 
     int numCols = getCols(grid); 
@@ -106,46 +107,40 @@ tuple_t* positionInit(grid_t* grid, int seed)
     return tuple; 
 }
 
-/**************** playerGridInit ****************/
-grid_t* playerGridInit(grid_t* masterGrid, tuple_t* position)
-{
-
-}
-
-/**************** addGold ****************/
-int addGold(player_t* player, int goldCollected, int* remainingGold)
-{
-    int currGold = getGold(player); 
-    setGold(player, currGold + goldCollected); 
-    *remainingGold -= goldCollected; 
-    return *remainingGold; 
-}
-
 /**************** movePlayer ****************/
-void movePlayer(player_t* player, grid_t* masterGrid, char keyPressed, player_t** players)
+void movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players)
 {
+    // determine the new position of the player
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
-    if (checkValidMove(grid, getCurrentPos(player), newPosition)) {
-        updateGrid(getGrid(player), masterGrid, getCurrentPos(player), newPosition, players);  // TODO: write in grid.c
+    posX = tupleGetX(newPosition); 
+    posY = tupleGetY(newPosition); 
+
+    // if new position is valid 
+    if (checkValidMove(masterGrid, newPosition, players)) {
+
+        // check if gold and update accordingly
+        if (isGold(spectatorGrid, newPosition)) {
+            int goldAmt = updateGoldCount(masterGrid, newPosition); // get amount of gold collected
+            addPlayerGold(player, goldAmt); // update player's count of their gold 
+        }
+        
+        // update player's visibility 
+        char* updatedVisibility = updateVisibility(masterGrid, posX, posY, getVisibility(player));
+        mem_free(getVisibility(player)); // TODO - not sure if this is necessary 
+        int index = charConvertIndexNum(masterGrid, posX, posY); 
+        updatedVisibility[index] = '@'; 
+        setVisibility(updatedVisibility);  
+
+        // update spectator grid
+        updateSpectatorGrid(spectatorGrid, masterGrid, getID(player), newPosition, getCurrentPos(player)); 
+
+        // update player current position
         setCurrentPos(player, newPosition); 
+        
     } else {
-        // TODO: what to return if the player inputs an invalid move?
-        return NULL; 
+        return NULL; // TODO or do nothing? 
     }
 }
-
-/**************** updateSpectator ****************/
-grid_t* updateSpectator(player_t* player, grid_t* masterGrid, char keyPressed, player_t* spectator, player_t** players)
-{
-    tuple_t* newPosition = determineNewPosition(player, keyPressed); 
-    if (checkValidMove(grid, newPosition, players)) {
-        updateSpectatorGrid(getGrid(spectator), masterGrid, getID(player), newPosition, getCurrentPos(player)); // TODO: write in grid.c
-        return getGrid(player); 
-    } else {
-        // TODO: what to return if the player inputs an invalid move?
-        return NULL; 
-    }  
-} 
 
 /**************** checkValidMove ****************/
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
@@ -157,12 +152,12 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
     if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
 
     // validate not a wall
-    if (! isValidSpot(grid, newPosition)) { return false; }
+    if (! validSpot(grid, x, y)) { return false; }
 
     // validate no other player is there
    for (int i = 0; i < 26; i++) { // TODO - may need if statement so that the current player isn't being checked here
         player_t* otherPlayer = players[i]
-        if (tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
+        if (otherPlayer != NULL && tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
             return false; 
         }
     }
@@ -211,6 +206,13 @@ tuple_t* determineNewPosition(player_t* player, char keyPressed)
     return initTuple(x, y); 
 }
 
+/**************** addPlayerGold ****************/
+void addPlayerGold(player_t* player, int goldCollected)
+{
+    int currGold = getGold(player); 
+    setGold(player, currGold + goldCollected); 
+}
+
 /**************** deletePlayer ****************/
 void deletePlayer(player_t* player)
 {
@@ -223,45 +225,11 @@ void deletePlayer(player_t* player)
             mem_free(player->ID); 
         }
 
-        if (getGrid(player) != NULL) {
-            delete(player->grid); 
+        if (getVisibility(player) != NULL) {
+            mem_free(player->visibility); 
         }
         // TODO: only question is whether or not we need to delete/free the tuple
     }
-}
-
-/**************** helper methods that will go in grid ****************/
-bool isValidSpot(grid_t* grid, tuple_t* location) 
-{
-    int x = tupleGetX(location); 
-    int y = tupleGetY(location); 
-
-    return ((strcmp(grid[x][y], '#')) || (strcmp(grid[x][y], '.'))); 
-}
-
-void updateGrid(grid_t* playerGrid, grid_t* masterGrid, tuple_t* oldPosition, tuple_t* newPosition, player_t** players)
-{
-    // physically move the player in the grid 
-    movePlayerInGrid(playerGrid, masterGrid, '@', newPosition, oldPosition); 
-    
-    // update player visibility
-    updateVisibility(playerGrid, newPosition, players);  
-}
-
-updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
-{
-    movePlayerInGrid(spectatorGrid, masterGrid, playerID, newPosition, oldPosition); 
-} 
-
-void movePlayerInGrid(grid_t* grid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
-{
-    int newX = tupleGetX(newPosition); 
-    int newY = tupleGetY(newPosition); 
-    int oldX = tupleGetX(oldPosition); 
-    int oldY = tupleGetY(oldPosition); 
-
-    grid[oldX][oldY] = masterGrid[oldX][oldY]; 
-    grid[newX][newY] = playerID; 
 }
 
 
@@ -284,6 +252,12 @@ grid_t* getGrid(player_t* player) { return player->grid; }
 
 /**************** setGrid ****************/
 void setGrid(player_t* player, grid_t* grid) { player->grid = grid; }
+
+/**************** getVisibility ****************/
+char* getVisibility(player_t* player) { return player->visibility; }
+
+/**************** setVisibility ****************/
+void setVisibility(player_t* player, char* visibility) { player->visibility = visibility; }
 
 /**************** getCurrentPos ****************/
 tuple_t* getCurrentPos(player_t* player) { return player->currentPosition; }

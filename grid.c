@@ -27,6 +27,7 @@ typedef struct grid
 
 static const char room = '.';
 static const char pile = '*';
+static const char passage = '#'; 
 
 static const int minGold = 10;
 static const int maxGold = 30;
@@ -46,7 +47,7 @@ int getCols(grid_t* masterGrid);
 int getNumPiles(grid_t* masterGrid);
 int getGoldLeft(grid_t* masterGrid);
 void buildPiles(int seed, grid_t* masterGrid);
-int updateGoldCount(grid_t* masterGrid, int goldDecrease, int rowCord, int colCord);
+int updateGoldCount(grid_t* masterGrid, int rowCord, int colCord);
 void buildUpdatedVisibility(char* updatedVis);
 char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
 bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
@@ -59,7 +60,9 @@ char* charConvertIndex(grid_t* masterGrid, char** gridMap);
 int charConvertIndexNum(grid_t* masterGrid, int row, int col);
 char* initializeVisibility(grid_t* masterGrid, int row, int col);
 
-
+void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
+void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
 
 
 /*
@@ -254,8 +257,10 @@ void buildPiles(int seed, grid_t* masterGrid)
 * Inputs: a player's grid, the count 
 * Output: the amount of gold removed. 
 */
-int updateGoldCount(grid_t* masterGrid, int goldDecrease, int rowCord, int colCord)
+int updateGoldCount(grid_t* masterGrid, tuple_t* position)
 {
+    int rowCord = tupleGetX(position); 
+    int colCord = tupleGetY(position); 
     if(masterGrid != NULL)
     {
         int removeGold;
@@ -444,6 +449,12 @@ bool validSpot(grid_t* masterGrid, int row, int col)
 }
 
 
+bool isGold(grid_t* grid, tuple_t* location)
+{
+    int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
+    return (grid[index] == pile); 
+}
+
 /*
 * Deletes the player's grid by freeing its memory 
 *   
@@ -495,8 +506,25 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col)
     return NULL;
 }
 
+void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position)
+{
+     if (spectatorGrid != NULL && masterGrid != NULL) { return; }
 
+    int positionIndex = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
+    
+    spectatorGrid[positionIndex] = playerID; 
+}
 
+void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
+{
+    if (spectatorGrid != NULL && masterGrid != NULL) { return; }
+
+    int newPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(newPosition), tupleGetY(newPosition)); 
+    int oldPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(oldPosition), tupleGetY(oldPosition)); 
+    
+    spectatorGrid[newPositionIndex] = playerID; 
+    spectatorGrid[oldPositionIndex] = masterGrid[oldPositionIndex];
+}
 
 
 /*
@@ -535,3 +563,41 @@ int charConvertIndexNum(grid_t* masterGrid, int row, int col)
     }
     return -1; 
 }
+
+/**************** gridFromVisibility ****************/
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
+{
+    if (masterGrid == NULL || playerVisibility == NULL) { return NULL; }
+
+    char* gridDisplay = mem_malloc(sizeof(char) * (getCols(masterGrid) * getRows(masterGrid) + 10)); 
+
+    for (int i = 0; i < strlen(playerVisibility); i++) {
+
+        if (playerVisibility[i] == alrVis) { // if this location is in memory 
+            // TODO -- this won't work right now because we need a clean masterGrid
+            // and also one that contains where all the gold is and such 
+            if (masterGrid[i] == pile || isupper(masterGrid[i]) != 0 ) {
+   
+                if (masterGrid[i] == passage) { // if it's a passage, should be # 
+                    gridDisplay[i] = passage; 
+                } else {
+                    gridDisplay[i] = room; // or . 
+                }
+
+            } else {
+                gridDisplay[i] = masterGrid[i]; 
+            }
+        }
+
+        else if (playerVisibility[i] == vis) { // visible 
+            gridDisplay[i] = masterGrid[i]; 
+        }
+
+        else { // not visible, space should be empty 
+            gridDisplay[i] = " "; 
+        }
+    }
+
+    return gridDisplay; 
+}
+

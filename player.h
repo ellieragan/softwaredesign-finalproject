@@ -29,13 +29,13 @@ typedef struct player player_t; // opaque to users of the module
 */
 player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket); 
 
-/**************** addGold ****************/
+/**************** addPlayerGold ****************/
 /* Add gold to a player's gold count 
 * 
-* input: the player who collected gold, the amount of gold collected, and a pointer to the remaining gold 
-* output: a pointer to the int representing the remaining gold 
+* input: the player who collected gold and the amount of gold collected
+* output: n/a
 */
-int addGold(player_t* player, int goldCollected, int* remainingGold);
+void addPlayerGold(player_t* player, int goldCollected)
 
 /**************** movePlayer ****************/
 /* Moves player and updates their grid of viewed spaces
