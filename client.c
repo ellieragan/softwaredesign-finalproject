@@ -41,8 +41,11 @@ int main(const int argc, char* argv[])
   printf("%s\n", host);
   port = argv[2];
   printf("%s\n", port);
-  playerName = argv[3];
-  printf("%s\n", playerName);
+
+  if (isPlayer) {
+    playerName = argv[3];
+    printf("%s\n", playerName);
+  }
   //if (!message_setAddr(host, port, server)) {
     //fprintf
   //server = malloc(sizeof(addr_t));
@@ -93,17 +96,18 @@ int main(const int argc, char* argv[])
 
   //initialize ncurses
   initscr(); //screen
+  printf("initted\n");
   cbreak();
   noecho();
-  //start_color();
-  //init_pair(1, COLOR_RED, COLOR_BLACK);
-  //attron(COLOR_PAIR(1));
+  start_color();
+  init_pair(1, COLOR_RED, COLOR_BLACK);
+  attron(COLOR_PAIR(1));
   //attroff(COLOR_PAIR(1));
   //int ly, lx; //upper left corner
   //getbegyx(stdscr, ly, lx);
   //int ry, rx; //lower right corner
   getmaxyx(stdscr, ry, rx);
-
+  refresh();
 
   bool ok = message_loop(&server, 0, NULL, handleInput, handleMessage);
   message_done();
@@ -143,7 +147,7 @@ bool parseArgs(const int argc, char* argv[])
 static bool handleInput(void* arg) 
 {
   //use ncurses to make key input into something the server can deal with
-  char* message = NULL;
+  char* message = malloc(7);
   char c = getch();
     if (isPlayer) {
       if (c != EOF) {
@@ -180,6 +184,7 @@ static bool handleInput(void* arg)
       //case n: message_send(*server, "KEY n");
       //case N: message_send(*server, "KEY N");
     //}
+    free(message);
     return false;
 }
 
@@ -189,30 +194,37 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     //const char* content = message + strlen("OK ");
     //do something with content???
   } 
+
   else if (strncmp(message, "GRID ", strlen("GRID ")) == 0) {
     const char* content = message + strlen("GRID ");
     int nrows, ncols;
-    sscanf(content, "GRID %d %d", &nrows, &ncols);
+    sscanf(content, "%d %d", &nrows, &ncols);
 
     bool tooSmall = true;
+    getmaxyx(stdscr, ry, rx);
 
-    if (nrows >= (ry+1) && ncols >= (rx+1)) {
+    if (ry >= (nrows+1) && rx >= (ncols+1)) {
       tooSmall = false;
     }
 
     else {
-      printw("screen size too small for grid!");
+      printw("screen size too small for grid! expand screen and push 'enter'\n");
+      refresh();
 
       while (tooSmall) {
-
-        endwin();
-        initscr();
-        printw("screen size too small for grid!\n");
-        refresh();
+        while (getch() != '\n') {
+        ;
+        }
+        //refresh();
         getmaxyx(stdscr, ry, rx);
+        fprintf(stderr, "%d %d\n", ry, rx);
 
-        if (nrows >= (ry + 1) && ncols >= (rx + 1)) {
+        if (ry >= (nrows + 1) && rx >= (ncols + 1)) {
           tooSmall = false;
+        }
+        else {
+          printw("screen size too small for grid! expand screen and push 'enter'\n");
+          refresh();
         }
       }
     }
@@ -221,13 +233,16 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   else if (strncmp(message, "GOLD ", strlen("GOLD ")) == 0) {
     const char* content = message + strlen("GOLD ");
     printw("%s\n", content);
+    refresh();
   }
 
   else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY\n")) == 0) {
     const char* content = message + strlen("DISPLAY\n");
-    char* gridMap = NULL;
-    sscanf(content, "DISPLAY\n%s", gridMap);
-    printw("%s", gridMap);
+    //char* gridMap = NULL;
+    //sscanf(content, "%s", gridMap);
+    printf("\nhandled correctly\n");
+    printw("%s", content);
+    refresh();
   }
 
   else if (strncmp(message, "QUIT ", strlen("QUIT ")) == 0) {
@@ -240,8 +255,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     //message_done();
 
     char* whyQuit = NULL;
-    sscanf(content, "QUIT %s", whyQuit);
+    sscanf(content, "%s", whyQuit);
     printf("%s\n", whyQuit);
+    attroff(COLOR_PAIR(1));
 
     free(whyQuit);
   }
@@ -250,8 +266,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     const char* content = message + strlen("ERROR ");
 
     char* error = NULL;
-    sscanf(content, "ERROR %s", error);
+    sscanf(content, "%s", error);
     printw("%s\n", error);
+    refresh();
   }
 
   return false;
