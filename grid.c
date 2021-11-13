@@ -107,7 +107,7 @@ grid_t* grid_new(char* filename, int seed)
     start[totalCount] = '\0';
 
     grid_t* masterGrid = grid_newHelper(start, rowNum, colNum);
-    buildPiles(seed, masterGrid);
+    // buildPiles(seed, masterGrid);
 
     return masterGrid;
 }
@@ -590,7 +590,7 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
         }
 
         else if (playerVisibility[i] == vis) { // visible 
-            gridDisplay[i] = masterGrid[i]; 
+            gridDisplay[i] = spectatorGrid[i]; 
         }
 
         else { // not visible, space should be empty 

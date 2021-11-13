@@ -35,17 +35,15 @@ typedef struct player{
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
 player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket); 
-void movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players); 
+int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players); 
 void deletePlayer(player_t* player); 
-
 
 /**************** local functions ****************/
 /* not visible outside this file */
 tuple_t* getRandomPosition(grid_t* grid, int seed); 
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
-void addPlayerGold(player_t* player, int goldCollected); 
+int addPlayerGold(player_t* player, int goldCollected); 
 tuple_t* determineNewPosition(player_t* player, char keyPressed); 
-
 
 /**************** initPlayer ****************/
 player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket)
@@ -108,20 +106,21 @@ tuple_t* getRandomPosition(grid_t* grid, int seed)
 }
 
 /**************** movePlayer ****************/
-void movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players)
+int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players)
 {
     // determine the new position of the player
     tuple_t* newPosition = determineNewPosition(player, keyPressed); 
     posX = tupleGetX(newPosition); 
     posY = tupleGetY(newPosition); 
+    
+    int goldCollected = 0; 
 
     // if new position is valid 
     if (checkValidMove(masterGrid, newPosition, players)) {
-
         // check if gold and update accordingly
         if (isGold(spectatorGrid, newPosition)) {
-            int goldAmt = updateGoldCount(masterGrid, newPosition); // get amount of gold collected
-            addPlayerGold(player, goldAmt); // update player's count of their gold 
+            goldCollected = updateGoldCount(masterGrid, newPosition); // get amount of gold collected
+            addPlayerGold(player, goldCollected); // update player's count of their gold 
         }
         
         // update player's visibility 
@@ -137,9 +136,9 @@ void movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, cha
         // update player current position
         setCurrentPos(player, newPosition); 
         
-    } else {
-        return NULL; // TODO or do nothing? 
-    }
+    } 
+
+    return goldCollected; 
 }
 
 /**************** checkValidMove ****************/
@@ -247,12 +246,6 @@ char* getID(player_t* player) { return player->ID; }
 /**************** setID ****************/
 void setID(player_t* player, char* ID) { player->ID = ID; }
 
-/**************** getGrid ****************/
-grid_t* getGrid(player_t* player) { return player->grid; }
-
-/**************** setGrid ****************/
-void setGrid(player_t* player, grid_t* grid) { player->grid = grid; }
-
 /**************** getVisibility ****************/
 char* getVisibility(player_t* player) { return player->visibility; }
 
@@ -270,18 +263,6 @@ int getGold(player_t* player) { return player->gold; }
 
 /**************** setGold ****************/
 void setGold(player_t* player, int gold) { player->gold = gold; }
-
-/**************** getSpectatorStatus ****************/
-bool getSpectatorStatus(player_t* player) { return player->spectator; }
-
-/**************** setSpectatorStatus ****************/
-void setSpectatorStatus(player_t* player, bool spectator) { player->spectator = spectator; }
-
-/**************** getPlayers ****************/
-bool getPlayers(player_t* player) { return player->players; }
-
-/**************** setPlayers ****************/
-void setPlayers(player_t* player, player_t** players) { player->players = players; }
 
 /**************** getSocketAddr ****************/
 addr_t getSocketAddr(player_t* player) { return player->socket; }

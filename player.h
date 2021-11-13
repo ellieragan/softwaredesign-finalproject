@@ -19,7 +19,7 @@
 /**************** global types ****************/
 typedef struct player player_t; // opaque to users of the module 
 
-/**************** functions ****************/
+/**************** global functions, called by server ****************/
 
 /**************** initPlayer ****************/
 /* Initializes a new player data structure 
@@ -27,7 +27,7 @@ typedef struct player player_t; // opaque to users of the module
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket); 
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket);
 
 /**************** addPlayerGold ****************/
 /* Add gold to a player's gold count 
@@ -35,7 +35,7 @@ player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos
 * input: the player who collected gold and the amount of gold collected
 * output: n/a
 */
-void addPlayerGold(player_t* player, int goldCollected)
+void addPlayerGold(player_t* player, int goldCollected);
 
 /**************** movePlayer ****************/
 /* Moves player and updates their grid of viewed spaces
@@ -43,15 +43,7 @@ void addPlayerGold(player_t* player, int goldCollected)
 * input: player who moved, the key they pressed, and a list of the other players in the game
 * output: the updated grid of the player's viewed maze 
 */
-grid_t* movePlayer(player_t* player, char keyPressed, player_t** otherPlayers); 
-
-/**************** updateSpectator ****************/
-/* Update the grid of the spectator, with each player movement 
-* 
-* input: information about the player that moved and the spectator player object
-* output: the updated spectator grid 
-*/
-grid_t* updateSpectator(player_t* player, grid_t* masterGrid char keyPressed, player_t* spectator, player_t** otherPlayers); 
+int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 
@@ -60,6 +52,24 @@ grid_t* updateSpectator(player_t* player, grid_t* masterGrid char keyPressed, pl
 * output: n/a
 */
 void deletePlayer(player_t* player); 
+
+/**************** helper functions ****************/
+
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
+
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+tuple_t* determineNewPosition(player_t* player, char keyPressed) ;
 
 
 /**************** getters and setters ****************/
@@ -96,21 +106,21 @@ char* getID(player_t* player);
 */
 void setID(player_t* player, char* ID); 
 
-/**************** getGrid ****************/
-/* get a player's grid of viewed locations
+/**************** getVisibility ****************/
+/* get a player's visibility
 * 
 * input: player
 * output: player's viewed grid 
 */
-grid_t* getGrid(player_t* player); 
+char* getVisibility(player_t* player); 
 
-/**************** getGrid ****************/
+/**************** setVisibility ****************/
 /* set a player's grid of viewed locations
 * 
 * input: player and grid to set 
 * output: n/a
 */
-void getGrid(player_t* player, grid_t* grid); 
+void setVisibility(player_t* player, char* visibility); 
 
 /**************** getCurrentPos ****************/
 /* get a player's current position 
@@ -143,23 +153,6 @@ int getGold(player_t* player);
 * output: n/a 
 */
 void setGold(player_t* player, int gold); 
-
-/**************** getSpectatorStatus ****************/
-/* get a player's status as a spectator 
-* 
-* input: player
-* output: boolean representing whether or not the player is a spectator, true if player is a spectator, false otherwise 
-*/
-bool getSpectatorStatus(player_t* player); 
-
-/**************** setSpectatorStatus ****************/
-/* set a player's status as a spectator 
-* 
-* input: player and spectator status boolean 
-* output: n/a
-*/
-void setSpectatorStatus(player_t* player, bool spectator); 
-
 
 /**************** getSocketAddr ****************/
 /* get a player's socket address
