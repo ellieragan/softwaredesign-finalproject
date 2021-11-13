@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h> 
+// #include "./libcs50/mem.h"
 
 /**************** global types ****************/
 typedef struct tuple tuple_t; // TODO: this could also be defined in grid, which might make more sense 

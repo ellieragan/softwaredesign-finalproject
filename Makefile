@@ -3,33 +3,41 @@
 # Donia Tung
 # CS50, Fall 2021
 
-PROG = grid
-OBJS = grid.o
-LIBS = ./libcs50/libcs50-given.a
-
-CFLAGS = -Wall -pedantic -std=c11 -ggdb 
-VFLAGS = --leak-check=full --show-leak-kinds=all
+L = ../tse/libcs50
+S = ./support
 CC = gcc
-MAKE = MAKE
+CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
 
-all: grid
+OBJS = tuple.o # player.o grid.o 
+LIBS = $L/libcs50.a -lcurses -lm#$C/common.a
 
-$(PROG): $(OBJS) $(LLIBS)
-		$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+.PHONY: all clean
 
-# Dependencies: object files depend on header files
-grid.o: grid.h
+all: client
 
-.PHONY: all clean test valgrind
+tuple.o: tuple.h
 
-test: #${PROG2} # ${PROG} 
-	bash testing.sh &> testing.out
+tuple: tuple.o # $(LIBS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+grid.o: tuple.h grid.h
+
+grid: grid.o $(LIBS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+player.o: tuple.h grid.h player.h
+
+player: player.o $(LIBS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+test:
+	bash -v testing.sh >& testing.out
 
 clean:
-	rm -rf *.dSYM  # MacOS debugger info
+	rm -f client
 	rm -f *~ *.o
+	rm -rf *.dSYM
 	rm -f core
-	rm -f $(PROG)
 
 # PROG = player
 # OBJS = player.o grid.o

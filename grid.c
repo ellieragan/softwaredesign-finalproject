@@ -10,7 +10,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <ctype.h>
 #include "./libcs50/file.h"
+#include "./libcs50/mem.h"
+#include "./tuple.h"
 
 typedef struct grid
 {
@@ -43,7 +46,7 @@ int getCols(grid_t* masterGrid);
 int getNumPiles(grid_t* masterGrid);
 int getGoldLeft(grid_t* masterGrid);
 void buildPiles(int seed, grid_t* masterGrid);
-int updateGoldCount(grid_t* masterGrid, int rowCord, int colCord);
+int updateGoldCount(grid_t* masterGrid, tuple_t* position);
 void buildUpdatedVisibility(char* updatedVis);
 char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
 bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
@@ -58,7 +61,7 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col);
 
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility);
 
 
 /*
@@ -448,7 +451,7 @@ bool validSpot(grid_t* masterGrid, int row, int col)
 bool isGold(grid_t* grid, tuple_t* location)
 {
     int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
-    return (grid[index] == pile); 
+    return (grid->filemap[index] == pile); 
 }
 
 /*
@@ -508,7 +511,7 @@ void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char pl
 
     int positionIndex = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
     
-    spectatorGrid[positionIndex] = playerID; 
+    spectatorGrid->filemap[positionIndex] = playerID; 
 }
 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
@@ -518,8 +521,8 @@ void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerI
     int newPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(newPosition), tupleGetY(newPosition)); 
     int oldPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(oldPosition), tupleGetY(oldPosition)); 
     
-    spectatorGrid[newPositionIndex] = playerID; 
-    spectatorGrid[oldPositionIndex] = masterGrid[oldPositionIndex];
+    spectatorGrid->filemap[newPositionIndex] = playerID; 
+    spectatorGrid->filemap[oldPositionIndex] = masterGrid->filemap[oldPositionIndex];
 }
 
 
@@ -568,20 +571,21 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
     char* gridDisplay = mem_malloc(sizeof(char) * (getCols(masterGrid) * getRows(masterGrid) + 10)); 
 
     for (int i = 0; i < strlen(playerVisibility); i++) {
+        char* masterMap = masterGrid->filemap; 
 
         if (playerVisibility[i] == alrVis) { // if this location is in memory 
             // TODO -- this won't work right now because we need a clean masterGrid
             // and also one that contains where all the gold is and such 
-            if (masterGrid[i] == pile || isupper(masterGrid[i]) != 0 ) {
+            if (masterMap[i] == pile || isupper(masterMap[i]) != 0 ) {
    
-                if (masterGrid[i] == passage) { // if it's a passage, should be # 
+                if (masterMap[i] == passage) { // if it's a passage, should be # 
                     gridDisplay[i] = passage; 
                 } else {
                     gridDisplay[i] = room; // or . 
                 }
 
             } else {
-                gridDisplay[i] = masterGrid[i]; 
+                gridDisplay[i] = masterMap[i]; 
             }
         }
 
@@ -590,7 +594,7 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
         }
 
         else { // not visible, space should be empty 
-            gridDisplay[i] = " "; 
+            gridDisplay[i] = ' '; 
         }
     }
 

@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "libcs50/mem.h"
+// #include "libcs50/mem.h"
 
 /**************** file-local global variables ****************/
 /* none */
@@ -41,7 +41,7 @@ tuple_t* initTuple(int x, int y)
     return NULL;
   }
 
-  tuple_t *tuple = mem_malloc(sizeof(tuple_t));
+  tuple_t *tuple = malloc(sizeof(tuple_t));
   tuple->x = x;
   tuple->y = y;
 
@@ -52,7 +52,7 @@ tuple_t* initTuple(int x, int y)
 void deleteTuple(tuple_t *tuple)
 {
   if (tuple != NULL) {
-    mem_free(tuple);
+    free(tuple);
   }
 }
 
@@ -94,5 +94,5 @@ void tupleSetY(tuple_t* tuple, int y)
 /*********** tupleEquals ***********/
 bool tupleEquals(tuple_t* a, tuple_t* b) 
 {
-    return ((tupleGetX(a) == tupleGetX(b)) && (tupleGetY(a) == tupleGetY(b)) ) 
+    return ((tupleGetX(a) == tupleGetX(b)) && (tupleGetY(a) == tupleGetY(b)) ); 
 }
