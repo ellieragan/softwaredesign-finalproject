@@ -4,17 +4,13 @@
 * Jeffrey Liu, November 2021
 */
 
-
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#include "file.h"
-
-
+#include "./libcs50/file.h"
 
 typedef struct grid
 {

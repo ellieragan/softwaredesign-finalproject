@@ -16,7 +16,10 @@
 // #include "grid.h"
 
 /**************** file-local global variables ****************/
-/* none */
+static const int left = -1; 
+static const int right = -1; 
+static const int up = -1; 
+static const int down = 1; 
 
 /**************** local types ****************/
 /* none */
@@ -104,13 +107,85 @@ tuple_t* getRandomPosition(grid_t* grid, int seed)
     return tuple; 
 }
 
-/**************** movePlayer ****************/
-int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players)
+/**************** checkValidMove ****************/
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
 {
+    int x = tupleGetX(newPosition); 
+    int y = tupleGetY(newPosition); 
+
+    // validate within bounds 
+    if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
+
+    // validate not a wall
+    if (! validSpot(grid, x, y)) { return false; }
+
+    // validate no other player is there
+   for (int i = 0; i < 26; i++) { // TODO - may need if statement so that the current player isn't being checked here
+        player_t* otherPlayer = players[i]
+        if (otherPlayer != NULL && tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
+            return false; 
+        }
+    }
+    // would return an index
+    return true; 
+}
+
+/**************** handlePlayerMove ****************/
+int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players)
+{
+
+    switch(keyPressed) { // assumes 0,0 is the top left corner
+        case ('k') : // up 
+            return playerStep(player, 0, up); 
+        case('l') : // right 
+            return playerStep(player, right, 0);
+        case('j') : // down
+            return playerStep(player, 0, down);
+        case ('h') : // left 
+            return playerStep(player, left, 0);
+        case ('y') : // diagonally up & left
+            return playerStep(player, left, up);
+        case('u') : // diagonally up & right 
+            return playerStep(player, right, up);
+        case('b') :  // diagonally down & left
+            return playerStep(player, left, down);
+        case ('n') : // diagonally down & right  
+            return playerStep(player, right, down);
+
+        case ('K') : // up 
+            return playerSprint(player, 0, up); 
+        case('L') : // right 
+            return playerSprint(player, right, 0); 
+        case('J') : // down
+            return playerSprint(player, 0, down); 
+        case ('H') : // left 
+            return playerSprint(player, left, 0); 
+        case ('Y') : // diagonally up & left
+            return playerSprint(player, left, up); 
+        case('U') : // diagonally up & right 
+            return playerSprint(player, right, up); 
+        case('B') :  // diagonally down & left
+            return playerSprint(player, left, down); 
+        case ('N') : // diagonally down & right  
+            return playerSprint(player, right, down);   
+    }
+}
+
+/**************** getNextPosition ****************/
+tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY)
+{
+    return initTuple(tupleGetX(position) + deltaX, tupleGetY(position) + deltaY);
+}
+
+/**************** playerStep ****************/
+int playerStep(player_t* player, int deltaX, int deltaY)
+{
+    tuple_t* currentPosition = getCurrentPos(player);
+    tuple_t* newPosition = getNextPosition(currentPosition, deltaX, deltaY); 
+
     // determine the new position of the player
-    tuple_t* newPosition = determineNewPosition(player, keyPressed); 
-    posX = tupleGetX(newPosition); 
-    posY = tupleGetY(newPosition); 
+    int x = tupleGetX(newPosition); 
+    int y = tupleGetY(newPosition); 
     
     int goldCollected = 0; 
 
@@ -138,71 +213,25 @@ int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char
     } 
 
     return goldCollected; 
+
 }
 
-/**************** checkValidMove ****************/
-bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
+
+/**************** playerSprint ****************/
+int playerSprint(player_t* player, int deltaX, int deltaY)
 {
-    int x = tupleGetX(newPosition); 
-    int y = tupleGetY(newPosition); 
+    int goldCollected = 0; 
 
-    // validate within bounds 
-    if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
-
-    // validate not a wall
-    if (! validSpot(grid, x, y)) { return false; }
-
-    // validate no other player is there
-   for (int i = 0; i < 26; i++) { // TODO - may need if statement so that the current player isn't being checked here
-        player_t* otherPlayer = players[i]
-        if (otherPlayer != NULL && tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
-            return false; 
-        }
-    }
-    // would return an index
-    return true; 
-}
-
-/**************** determineNewPosition ****************/
-tuple_t* determineNewPosition(player_t* player, char keyPressed) 
-{
-    tuple_t* currentPosition = getCurrentPos(player); 
-    int x = tupleGetX(currentPosition); 
-    int y = tupleGetY(currentPosition); 
-
-    switch(keyPressed) { // assumes 0,0 is the top left corner
-        case ('k') : // up 
-            y -= 1;
-            break; 
-        case('l') : // right 
-            x += 1; 
-            break; 
-        case('j') : // down
-            y += 1; 
-            break; 
-        case ('h') : // left 
-            x -= 1; 
-            break; 
-        case ('y') : // diagonally up & left
-            y -= 1; 
-            x -= 1; 
-            break; 
-        case('u') : // diagonally up & right 
-            y -= 1; 
-            x += 1; 
-            break; 
-        case('b') :  // diagonally down & left
-            y += 1; 
-            x -= 1; 
-            break; 
-        case ('n') : // diagonally down & right  
-            y += 1; 
-            x += 1; 
-            break; 
+    tuple_t* nextPosition = getNextPosition(getCurrentPos(player), deltaX, deltaY); 
+    // while next position is valid 
+    while (checkValidMove(nextPosition)) {
+        // call playerStep 
+        goldCollected += playerStep(player, deltaX, deltaY);
     }
 
-    return initTuple(x, y); 
+    return goldCollected; 
 }
+
 
 /**************** addPlayerGold ****************/
 void addPlayerGold(player_t* player, int goldCollected)
