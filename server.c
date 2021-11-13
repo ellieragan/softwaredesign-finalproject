@@ -175,6 +175,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
       *index++; // add to index count
     }
+    return false; // continue loop
   }
   if (strcmp(msgType, "SPECTATE")){ // SPECTATE type messages
     if (spectator != NULL){ // replace existing spectator with new one
@@ -207,6 +208,8 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
     sprintf(displayMsg, "DISPLAY\n%s", displayStr);
     message_send(from, &displayMsg);
+
+    return false; // continue loop
   }
 
   if (strcmp(msgType, "KEY")){ // KEY type messages
@@ -293,13 +296,18 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
         if (strcmp(msgRest,"Q") == 0){
           message_send(from,"QUIT Thanks for watching!");
           deletePlayer(spectator);
-        }
+          }
       }
       // if not valid key
       else{
         message_send(from,"ERROR Invalid key for spectator client.");
       }
     }
+    return false; // continue loop
+  }
+  else{ // if invalid msgType
+    message_send(from, "ERROR Invalid message type.");
+    return false; // continue loop
   }
 }
 
