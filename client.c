@@ -30,6 +30,8 @@ bool isPlayer;
 //const int ncols;
 int ry, rx;
 const char* gold;
+char letter;
+int has, received, unclaimed;
 
 
 int main(const int argc, char* argv[])
@@ -96,15 +98,15 @@ int main(const int argc, char* argv[])
   //free(line);
 
   //initialize ncurses
-  initscr(); //screen
-  printf("initted\n");
-  cbreak();
-  noecho();
-  start_color();
-  init_pair(1, COLOR_RED, COLOR_BLACK);
-  attron(COLOR_PAIR(1));
-  getmaxyx(stdscr, ry, rx);
-  refresh();
+  //initscr(); //screen
+  //printf("initted\n");
+  //cbreak();
+  //noecho();
+  //start_color();
+  //init_pair(1, COLOR_RED, COLOR_BLACK);
+  //attron(COLOR_PAIR(1));
+  //getmaxyx(stdscr, ry, rx);
+  //refresh();
 
   bool ok = message_loop(&server, 0, NULL, handleInput, handleMessage);
   message_done();
@@ -186,13 +188,21 @@ static bool handleInput(void* arg)
 }
 
 static bool handleMessage(void* arg, const addr_t from, const char* message) {
-  int has, received, unclaimed;
-  char* player = malloc(2);
+  //int has, received, unclaimed;
+  //char* player = malloc(2);
 
   //const char* gold = NULL;
 
   if (strncmp(message, "OK ", strlen("OK ")) == 0) {
-    scanf("OK %c", player);
+
+    
+    char* content = (char*)message + strlen("OK ");
+   // char letter;
+    sscanf(content, "%c", &letter);
+    
+
+
+   // scanf("OK %c", player);
     //player = message + strlen("OK ");
   } 
 
@@ -200,6 +210,18 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     const char* content = message + strlen("GRID ");
     int nrows, ncols;
     sscanf(content, "%d %d", &nrows, &ncols);
+
+    //initialize ncurses
+  initscr(); //screen
+  printf("initted\n");
+  cbreak();
+  noecho();
+  start_color();
+  init_pair(1, COLOR_RED, COLOR_BLACK);
+  attron(COLOR_PAIR(1));
+  getmaxyx(stdscr, ry, rx);
+  refresh();
+
 
     bool tooSmall = true;
     getmaxyx(stdscr, ry, rx);
@@ -250,19 +272,20 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     const char* content = message + strlen("DISPLAY\n");
 
     clear();
+    printf("%d %d %d\n", has, unclaimed, received);
 
-    //if (isPlayer) {
-      //if (received > 0) {
-        //printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", player, has, unclaimed, received);
-        //printw("%s/n%s", gold, content);
-      //}
-      //else {
-        //printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", player, has, unclaimed);
-      //}
-    //}
-    //else {
-      //printw("Spectator: %d nuggets unclaimed).\n", unclaimed);
-    //}
+    if (isPlayer) {
+      if (received > 0) {
+        printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", letter, has, unclaimed, received);
+        printw("%s/n%s", gold, content);
+      }
+      else {
+        printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", letter, has, unclaimed);
+      }
+    }
+    else {
+      printw("Spectator: %d nuggets unclaimed).\n", unclaimed);
+    }
 
     printw("%s", content);
     refresh();
@@ -296,3 +319,5 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   return false;
 }
+
+
