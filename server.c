@@ -194,8 +194,8 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
     
     // construct and send GRID message to client
-    int nrows = getRows(getGrid(spectator));
-    int ncols = getCols(getGrid(spectator));
+    int nrows = getRows(spectator);
+    int ncols = getCols(spectator);
 
     char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
     sprintf(gridMsg,"GRID %d %d",nrows,ncols);
@@ -228,33 +228,6 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       if (validKey(&msgRest,false)){
         // if it is a movement key
         if (strcmp(msgRest,"Q")!=0){
-          /***************************** Dealing with spectator *********************************/
-          // update spectator grid and send new display to spectator
-          updateSpectator(player,masterGrid,msgRest,spectato
-          addr_t* spectSocket = getSocketAddr(spectator);
-
-          // construct and send GRID message to client
-          int nrows = getRows(getGrid(spectator));
-          int ncols = getCols(getGrid(spectator));
-      
-          char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
-          sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-          message_send(spectSocket, &gridMsg);
-
-          // construct and send GOLD message to clients
-          int remain = getGoldLeft(masterGrid);
-
-          char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
-          sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
-          message_send(spectSocket, &goldMsg);
-
-          // construct and send DISPLAY message to clients
-          char* displayStr = getDisplay(spectator);
-
-          char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
-          sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-          message_send(spectSocket, &displayMsg);
-
           /******************************* Dealing with player *************************************/
           // update player grid and send new display to player
           movePlayer(player,masterGrid,msgRest,players);
@@ -281,6 +254,32 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
           char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
           sprintf(displayMsg, "DISPLAY\n%s", displayStr);
           message_send(from, &displayMsg);
+
+
+          /***************************** Dealing with spectator *********************************/
+          if (spectAddr != NULL){
+            // construct and send GRID message to client
+            int nrows = getRows(spectator);
+            int ncols = getCols(spectator);
+
+            char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
+            sprintf(gridMsg,"GRID %d %d",nrows,ncols);
+            message_send(spectAddr, &gridMsg);
+
+            // construct and send GOLD message to clients
+            int remain = getGoldLeft(spectator);
+
+            char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
+            sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
+            message_send(spectAddr, &goldMsg);
+
+            // construct and send DISPLAY message to clients
+            char* displayStr = getFileMap(spectator);
+
+            char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
+            sprintf(displayMsg, "DISPLAY\n%s", displayStr);
+            message_send(spectAddr, &displayMsg);
+          }
         }
         // if not movement key, must be Q
         else{
@@ -300,7 +299,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
         // only possible key is Q
         if (strcmp(msgRest,"Q") == 0){
           message_send(from,"QUIT Thanks for watching!");
-          deletePlayer(spectator);
+          spectAddr = NULL;
           }
       }
       // if not valid key
