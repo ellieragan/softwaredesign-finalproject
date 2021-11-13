@@ -277,7 +277,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     if (isPlayer) {
       if (received > 0) {
         printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", letter, has, unclaimed, received);
-        printw("%s/n%s", gold, content);
+        received = 0;
+        //printw("%s/n%s", received, content);
       }
       else {
         printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", letter, has, unclaimed);
@@ -293,19 +294,18 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   else if (strncmp(message, "QUIT ", strlen("QUIT ")) == 0) {
     const char* content = message + strlen("QUIT ");
-
+    
+    attroff(COLOR_PAIR(1));
     endwin();
-    free(host);
-    free(port);
+    //free(host);
+    //free(port);
     //free(server);
     //message_done();
 
-    char* whyQuit = NULL;
-    sscanf(content, "%s", whyQuit);
-    printf("%s\n", whyQuit);
-    attroff(COLOR_PAIR(1));
 
-    free(whyQuit);
+    printf("%s\n", content);
+    return true;
+  
   }
 
   else if (strncmp(message, "ERROR ", strlen("ERROR ")) == 0) {
