@@ -22,6 +22,10 @@ static int countPlayers(player_t** players);
 static bool ifEmpty(char* str);
 static char* processName(char* name);
 static char* getID(int playerIndex);
+static bool validKey(char key, bool spectator);
+static int getPlayerin(player_t** players, addr_t* from);
+static char* getDisplay(player_t* player);
+static char* endMessage(player_t** players);
 
 // global constants
 int maxNamelength = 50;
