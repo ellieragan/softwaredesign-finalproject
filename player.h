@@ -27,7 +27,7 @@ typedef struct player player_t; // opaque to users of the module
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket);
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int seed);
 
 /**************** addPlayerGold ****************/
 /* Add gold to a player's gold count 
@@ -69,8 +69,15 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players);
 * input: 
 * output: 
 */
-tuple_t* determineNewPosition(player_t* player, char keyPressed) ;
+tuple_t* determineNewPosition(player_t* player, char keyPressed);
 
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+tuple_t* getRandomPosition(grid_t* grid, int seed); 
 
 /**************** getters and setters ****************/
 

@@ -46,7 +46,7 @@ int addPlayerGold(player_t* player, int goldCollected);
 tuple_t* determineNewPosition(player_t* player, char keyPressed); 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket)
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int seed)
 {
     // validate inputs aren't null
     if (realName == NULL || ID == NULL || grid == NULL || socket == NULL) {
@@ -54,7 +54,7 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket
     }
 
     // randomly select a position for the player
-    tuple_t* currentPos = getRandomPosition(masterGrid); 
+    tuple_t* currentPos = getRandomPosition(masterGrid, seed); 
 
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetX(currentPos), tupleGetY(currentPos)); 
@@ -81,7 +81,6 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket
 }
 
 /**************** positionInit ****************/
-// TODO --> MOVE TO SERVER
 tuple_t* getRandomPosition(grid_t* grid, int seed)
 {
     int numRows = getRows(grid); 
