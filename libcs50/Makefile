@@ -6,7 +6,7 @@
 
 # object files, and the target library
 OBJS = bag.o counters.o file.o hashtable.o hash.o mem.o set.o webpage.o
-LIB = libcs50.a
+LIB = libcs50-given.a
 
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS)
 CC = gcc

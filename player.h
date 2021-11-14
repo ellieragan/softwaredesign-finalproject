@@ -11,13 +11,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h> 
-// #include "grid.h"
+#include <unistd.h>
+#include "grid.h"
+#include "tuple.h"
+#include "libcs50/mem.h"
+
 
 /**************** global types ****************/
 typedef struct player player_t; // opaque to users of the module 
-typedef struct tuple tuple_t; // TODO: this could also be defined in grid, which might make more sense 
 
-/**************** functions ****************/
+/**************** global functions, called by server ****************/
 
 /**************** initPlayer ****************/
 /* Initializes a new player data structure 
@@ -25,15 +28,15 @@ typedef struct tuple tuple_t; // TODO: this could also be defined in grid, which
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator, addr_t socket); 
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed);
 
-/**************** addGold ****************/
+/**************** addPlayerGold ****************/
 /* Add gold to a player's gold count 
 * 
-* input: the player who collected gold, the amount of gold collected, and a pointer to the remaining gold 
-* output: a pointer to the int representing the remaining gold 
+* input: the player who collected gold and the amount of gold collected
+* output: n/a
 */
-int addGold(player_t* player, int goldCollected, int* remainingGold);
+void addPlayerGold(player_t* player, int goldCollected);
 
 /**************** movePlayer ****************/
 /* Moves player and updates their grid of viewed spaces
@@ -41,15 +44,7 @@ int addGold(player_t* player, int goldCollected, int* remainingGold);
 * input: player who moved, the key they pressed, and a list of the other players in the game
 * output: the updated grid of the player's viewed maze 
 */
-grid_t* movePlayer(player_t* player, char* keyPressed, player_t** otherPlayers); 
-
-/**************** updateSpectator ****************/
-/* Update the grid of the spectator, with each player movement 
-* 
-* input: information about the player that moved and the spectator player object
-* output: the updated spectator grid 
-*/
-grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator); 
+int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 
@@ -59,6 +54,31 @@ grid_t* updateSpectator(player_t* player, char* keyPressed, player_t* spectator)
 */
 void deletePlayer(player_t* player); 
 
+/**************** helper functions ****************/
+
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
+
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+tuple_t* determineNewPosition(player_t* player, char keyPressed);
+
+/****************  ****************/
+/*  
+* 
+* input: 
+* output: 
+*/
+tuple_t* getRandomPosition(grid_t* grid, int seed); 
 
 /**************** getters and setters ****************/
 
@@ -84,7 +104,7 @@ void setRealName(player_t* player, char* realName);
 * input: player 
 * output: player's local ID 
 */
-char* getID(player_t* player); 
+char getID(player_t* player); 
 
 /**************** setID ****************/
 /* set a player's localized ID 
@@ -92,23 +112,23 @@ char* getID(player_t* player);
 * input: player and ID to set 
 * output: n/a
 */
-void setID(player_t* player, char* ID); 
+void setID(player_t* player, const char ID); 
 
-/**************** getGrid ****************/
-/* get a player's grid of viewed locations
+/**************** getVisibility ****************/
+/* get a player's visibility
 * 
 * input: player
 * output: player's viewed grid 
 */
-grid_t* getGrid(player_t* player); 
+char* getVisibility(player_t* player); 
 
-/**************** getGrid ****************/
+/**************** setVisibility ****************/
 /* set a player's grid of viewed locations
 * 
 * input: player and grid to set 
 * output: n/a
 */
-void getGrid(player_t* player, grid_t* grid); 
+void setVisibility(player_t* player, char* visibility); 
 
 /**************** getCurrentPos ****************/
 /* get a player's current position 
@@ -141,23 +161,6 @@ int getGold(player_t* player);
 * output: n/a 
 */
 void setGold(player_t* player, int gold); 
-
-/**************** getSpectatorStatus ****************/
-/* get a player's status as a spectator 
-* 
-* input: player
-* output: boolean representing whether or not the player is a spectator, true if player is a spectator, false otherwise 
-*/
-bool getSpectatorStatus(player_t* player); 
-
-/**************** setSpectatorStatus ****************/
-/* set a player's status as a spectator 
-* 
-* input: player and spectator status boolean 
-* output: n/a
-*/
-void setSpectatorStatus(player_t* player, bool spectator); 
-
 
 /**************** getSocketAddr ****************/
 /* get a player's socket address
