@@ -3,70 +3,101 @@
 # Donia Tung
 # CS50, Fall 2021
 
-L = libcs50
+
 S = support
+L = libcs50
+OBJS = server.o player.o grid.o
+LIBS = -lm -lncurses
+LLIBS = $S/support.a $L/libcs50-given.a
+
+# uncomment the following to turn on verbose memory logging
+# TESTING= -DAPPTEST #-DMEMTEST
+
+CFLAGS = -Wall -pedantic -std=c11 -ggdb $(TESTING) -I$S
 CC = gcc
-CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
+MAKE = make
+# for memory-leak tests
+VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
 
-OBJS = tuple.o # player.o grid.o 
-LIBS = $S/support.a $L/libcs50-given.a -lcurses -lm#$C/common.a
+.PHONY: all test clean valgrind
 
-.PHONY: all clean
+all: 
+	$(MAKE) -C $S
+	$(MAKE) grid 
+	$(MAKE) player 
+	$(MAKE) playertest
 
-all: playertest
+tuple: tuple.h
+	$(CC) $(CFLAGS) $^ -o $@
 
-playertest.o: tuple.o grid.o player.o player.h
-playertest: playertest.o
-	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+grid:grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
+player:	player.h player.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
+playertest: playertest.o player.o grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
+
+grid.o: tuple.h grid.h
+player.o: tuple.h grid.h player.h
+playertest.o: player.h tuple.h grid.h 
 tuple.o: tuple.h
 
-tuple: tuple.o # $(LIBS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-grid.o: tuple.o grid.h
-
-grid: grid.o $(LIBS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-player.o: tuple.o grid.o player.h
-
-player: player.o $(LIBS)
-	$(CC) $(CFLAGS) $^ -o $@
-
 test:
-	bash -v testing.sh >& testing.out
+	$(MAKE) -C $S
+	$(MAKE) server
+	./server maps/main.txt
+
+valgrind:
+	$(MAKE) -C $S
+	$(MAKE) server
+	$(VALGRIND) ./server maps/main.txt
 
 clean:
+	rm -rf *.dSYM  # MacOS debugger info
 	rm -f *~ *.o
-	rm -rf *.dSYM
+	rm -f server gridtest player
+	rm -f vgcore.*
 	rm -f core
+	cd $S && $(MAKE) clean
 
-# PROG = player
-# OBJS = player.o grid.o
-# LIBS = ./libcs50/libcs50-given.a
-
-# CFLAGS = -Wall -pedantic -std=c11 -ggdb 
-# VFLAGS = --leak-check=full --show-leak-kinds=all
+# L = libcs50
+# S = support
 # CC = gcc
-# MAKE = MAKE
+# CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
 
-# all: player grid
+# OBJS = tuple.o # player.o grid.o 
+# LIBS = $S/support.a $L/libcs50-given.a -lcurses -lm
 
-# $(PROG): $(OBJS) $(LLIBS)
-# 		$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+# .PHONY: all clean
 
-# # Dependencies: object files depend on header files
-# grid.o: grid.h
-# player.o: player.h grid.h
+# all: playertest
 
-# .PHONY: all clean test valgrind
+# playertest.o: tuple.o grid.o player.o player.h
+# playertest: playertest.o
+# 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
-# test: #${PROG2} # ${PROG} 
-# 	bash testing.sh &> testing.out
+# tuple.o: tuple.h
+
+# tuple: tuple.o # $(LIBS)
+# 	$(CC) $(CFLAGS) $^ -o $@
+
+# grid.o: tuple.o grid.h
+
+# grid: grid.o $(LIBS)
+# 	$(CC) $(CFLAGS) $^ -o $@
+
+# player.o: tuple.o grid.o player.h
+
+# player: player.o $(LIBS)
+# 	$(CC) $(CFLAGS) $^ -o $@
+
+# test:
+# 	bash -v testing.sh >& testing.out
 
 # clean:
-# 	rm -rf *.dSYM  # MacOS debugger info
 # 	rm -f *~ *.o
+# 	rm -rf *.dSYM
 # 	rm -f core
-# 	rm -f $(PROG)

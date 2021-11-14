@@ -78,13 +78,14 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* 
     if (realName == NULL || (isalpha(ID) == 0) || masterGrid == NULL) {
         return NULL; 
     }
-
+    printf("before position"); 
     // randomly select a position for the player
     tuple_t* currentPos = getRandomPosition(masterGrid, seed); 
-
+    printf("position determined"); 
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetX(currentPos), tupleGetY(currentPos)); 
-
+    printf("visibility initialized"); 
+    
     // allocate space and set instance variables
     player_t* player = mem_malloc(sizeof(player_t));
     setRealName(player, realName); 
