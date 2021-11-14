@@ -21,7 +21,7 @@ static char* realname = "donia";
 static const char ID = 'A'; 
 int seed = 19283;
 int* seedPtr = &seed; 
-addr_t* address; // TODO -- real address here
+const addr_t address; // TODO -- real address here
 grid_t* masterGrid; 
 grid_t* spectatorGrid; 
 
