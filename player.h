@@ -103,7 +103,7 @@ void setRealName(player_t* player, char* realName);
 * input: player 
 * output: player's local ID 
 */
-char* getID(player_t* player); 
+char getID(player_t* player); 
 
 /**************** setID ****************/
 /* set a player's localized ID 

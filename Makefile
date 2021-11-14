@@ -3,13 +3,13 @@
 # Donia Tung
 # CS50, Fall 2021
 
-L = ../tse/libcs50
+L = ./libcs50
 S = ./support
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
 
 OBJS = tuple.o # player.o grid.o 
-LIBS = $L/libcs50.a -lcurses -lm#$C/common.a
+LIBS = $L/libcs50-given.a -lcurses -lm#$C/common.a
 
 .PHONY: all clean
 

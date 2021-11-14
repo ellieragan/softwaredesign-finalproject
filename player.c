@@ -11,9 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "tuple.h"
+#include "./support/message.h"
+#include "./tuple.h"
 #include "libcs50/mem.h"
-// #include "grid.h"
+#include "./grid.h"
 
 /**************** file-local global variables ****************/
 static const int left = -1; 
@@ -29,7 +30,7 @@ typedef struct player{
     char* realName; 
     char* ID; 
     char* visibility; 
-    tuple_t* currentPos; 
+    tuple_t* currentPosition; 
     int gold; 
     addr_t socket; 
 } player_t; 
@@ -37,22 +38,40 @@ typedef struct player{
 /**************** global functions ****************/
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket); 
-int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players); 
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int* seed);
+int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 void deletePlayer(player_t* player); 
 
 /**************** local functions ****************/
 /* not visible outside this file */
-tuple_t* getRandomPosition(grid_t* grid, int seed); 
+tuple_t* getRandomPosition(grid_t* grid, int* seed); 
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
-int addPlayerGold(player_t* player, int goldCollected); 
+void addPlayerGold(player_t* player, int goldCollected); 
 tuple_t* determineNewPosition(player_t* player, char keyPressed); 
+tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY);
+int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
+int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
+
+/**************** getters & setters ****************/
+char* getRealName(player_t* player);
+void setRealName(player_t* player, char* realName); 
+char* getID(player_t* player);
+void setID(player_t* player, char* ID);
+char* getVisibility(player_t* player);
+void setVisibility(player_t* player, char* visibility); 
+tuple_t* getCurrentPos(player_t* player); 
+void setCurrentPos(player_t* player, tuple_t* currentPosition);
+int getGold(player_t* player);
+void setGold(player_t* player, int gold); 
+addr_t getSocketAddr(player_t* player); 
+void setSocketAddr(player_t* player, addr_t socketAddr);
+
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int seed)
+player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int* seed)
 {
     // validate inputs aren't null
-    if (realName == NULL || ID == NULL || grid == NULL || socket == NULL) {
+    if (realName == NULL || ID == NULL || masterGrid == NULL) {
         return NULL; 
     }
 
@@ -72,11 +91,11 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket
     setVisibility(player, visibility);
     setCurrentPos(player, currentPos); 
     // setSpectatorStatus(player, spectator); 
-    setSocketAddr(socket); 
+    setSocketAddr(player, socket); 
 
     // check everything was initialized correctly 
     if (getRealName(player) == NULL || getID(player) == NULL ||  getVisibility(player) == NULL || 
-        getCurrentPos(player) == NULL || getSocketAddr(player) == NULL ) {
+        getCurrentPos(player) == NULL ) { // TODO: why didn't getSocketAddr(player) == NULL work? 
         return NULL; 
     } 
 
@@ -84,13 +103,13 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket
 }
 
 /**************** positionInit ****************/
-tuple_t* getRandomPosition(grid_t* grid, int seed)
+tuple_t* getRandomPosition(grid_t* grid, int* seed)
 {
     int numRows = getRows(grid); 
     int numCols = getCols(grid); 
 
     if (seed != NULL) {
-        srand(seed); 
+        srand(*seed); 
     } else {
         srand(getpid()); 
     }
@@ -99,7 +118,7 @@ tuple_t* getRandomPosition(grid_t* grid, int seed)
     int y = rand() % (numCols + 1); 
 
     tuple_t* tuple = initTuple(x, y); 
-    while (! isValidSpot(tuple)) {
+    while (! validSpot(grid, x, y)) {
         int x = rand() % (numRows + 1); 
         int y = rand() % (numCols + 1);
         tuple = initTuple(x, y); 
@@ -121,7 +140,7 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
 
     // validate no other player is there
    for (int i = 0; i < 26; i++) { // TODO - may need if statement so that the current player isn't being checked here
-        player_t* otherPlayer = players[i]
+        player_t* otherPlayer = players[i];
         if (otherPlayer != NULL && tupleEquals(getCurrentPos(otherPlayer), newPosition)) {
             return false; 
         }
@@ -136,39 +155,40 @@ int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid
 
     switch(keyPressed) { // assumes 0,0 is the top left corner
         case ('k') : // up 
-            return playerStep(player, 0, up); 
+            return playerStep(player, 0, up, spectatorGrid, masterGrid, players); 
         case('l') : // right 
-            return playerStep(player, right, 0);
+            return playerStep(player, right, 0, spectatorGrid, masterGrid, players);
         case('j') : // down
-            return playerStep(player, 0, down);
+            return playerStep(player, 0, down, spectatorGrid, masterGrid, players);
         case ('h') : // left 
-            return playerStep(player, left, 0);
+            return playerStep(player, left, 0, spectatorGrid, masterGrid, players);
         case ('y') : // diagonally up & left
-            return playerStep(player, left, up);
+            return playerStep(player, left, up, spectatorGrid, masterGrid, players);
         case('u') : // diagonally up & right 
-            return playerStep(player, right, up);
+            return playerStep(player, right, up, spectatorGrid, masterGrid, players);
         case('b') :  // diagonally down & left
-            return playerStep(player, left, down);
+            return playerStep(player, left, down, spectatorGrid, masterGrid, players);
         case ('n') : // diagonally down & right  
-            return playerStep(player, right, down);
+            return playerStep(player, right, down, spectatorGrid, masterGrid, players);
 
         case ('K') : // up 
-            return playerSprint(player, 0, up); 
+            return playerSprint(player, 0, up, spectatorGrid, masterGrid, players); 
         case('L') : // right 
-            return playerSprint(player, right, 0); 
+            return playerSprint(player, right, 0, spectatorGrid, masterGrid, players); 
         case('J') : // down
-            return playerSprint(player, 0, down); 
+            return playerSprint(player, 0, down, spectatorGrid, masterGrid, players); 
         case ('H') : // left 
-            return playerSprint(player, left, 0); 
+            return playerSprint(player, left, 0, spectatorGrid, masterGrid, players); 
         case ('Y') : // diagonally up & left
-            return playerSprint(player, left, up); 
+            return playerSprint(player, left, up, spectatorGrid, masterGrid, players); 
         case('U') : // diagonally up & right 
-            return playerSprint(player, right, up); 
+            return playerSprint(player, right, up, spectatorGrid, masterGrid, players); 
         case('B') :  // diagonally down & left
-            return playerSprint(player, left, down); 
+            return playerSprint(player, left, down, spectatorGrid, masterGrid, players); 
         case ('N') : // diagonally down & right  
-            return playerSprint(player, right, down);   
+            return playerSprint(player, right, down, spectatorGrid, masterGrid, players);   
     }
+    return -1;
 }
 
 /**************** getNextPosition ****************/
@@ -178,8 +198,9 @@ tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY)
 }
 
 /**************** playerStep ****************/
-int playerStep(player_t* player, int deltaX, int deltaY)
+int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players)
 {
+    // determine the new position of the player
     tuple_t* currentPosition = getCurrentPos(player);
     tuple_t* newPosition = getNextPosition(currentPosition, deltaX, deltaY); 
 
@@ -190,22 +211,22 @@ int playerStep(player_t* player, int deltaX, int deltaY)
     int goldCollected = 0; 
 
     // if new position is valid 
-    if (checkValidMove(masterGrid, newPosition, players)) {
+    if (checkValidMove(spectatorGrid, newPosition, players)) {
         // check if gold and update accordingly
         if (isGold(spectatorGrid, newPosition)) {
-            goldCollected = updateGoldCount(masterGrid, newPosition); // get amount of gold collected
+            goldCollected = updateGoldCount(spectatorGrid, newPosition); // get amount of gold collected
             addPlayerGold(player, goldCollected); // update player's count of their gold 
         }
         
         // update player's visibility 
-        char* updatedVisibility = updateVisibility(masterGrid, posX, posY, getVisibility(player));
+        char* updatedVisibility = updateVisibility(spectatorGrid, x, y, getVisibility(player));
         mem_free(getVisibility(player)); // TODO - not sure if this is necessary 
-        int index = charConvertIndexNum(masterGrid, posX, posY); 
+        int index = charConvertIndexNum(spectatorGrid, x, y); 
         updatedVisibility[index] = '@'; 
-        setVisibility(updatedVisibility);  
+        setVisibility(player, updatedVisibility);  
 
         // update spectator grid
-        updateSpectatorGrid(spectatorGrid, masterGrid, getID(player), newPosition, getCurrentPos(player)); 
+        updateSpectatorGrid(spectatorGrid, masterGrid, *getID(player), newPosition, getCurrentPos(player)); 
 
         // update player current position
         setCurrentPos(player, newPosition); 
@@ -216,22 +237,20 @@ int playerStep(player_t* player, int deltaX, int deltaY)
 
 }
 
-
 /**************** playerSprint ****************/
-int playerSprint(player_t* player, int deltaX, int deltaY)
+int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players)
 {
     int goldCollected = 0; 
 
     tuple_t* nextPosition = getNextPosition(getCurrentPos(player), deltaX, deltaY); 
     // while next position is valid 
-    while (checkValidMove(nextPosition)) {
+    while (checkValidMove(spectatorGrid, nextPosition, players)) {
         // call playerStep 
-        goldCollected += playerStep(player, deltaX, deltaY);
+        goldCollected += playerStep(player, deltaX, deltaY, spectatorGrid, masterGrid, players);
     }
 
     return goldCollected; 
 }
-
 
 /**************** addPlayerGold ****************/
 void addPlayerGold(player_t* player, int goldCollected)

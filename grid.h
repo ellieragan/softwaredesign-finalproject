@@ -4,14 +4,13 @@
 * Jeffrey Liu, November 2021
 */
 
-typdef struct grid grid_t
-{
+typedef struct grid{
     char* filemap;
     int rows;
     int cols;
     int gold;
     int goldLeft;
-}
+}grid_t; 
 
 /*
 * Reads the input map from the server module and the seed to create the map. Sets
@@ -82,7 +81,7 @@ void buildPiles(int seed, grid_t* playerGrid);
 * Inputs: a player's grid, the count 
 * Output: the amount of gold removed. 
 */
-int updateGoldCount(grid_t* playerGrid, int goldDecrease, tuple_t* location);
+int updateGoldCount(grid_t* masterGrid, tuple_t* position);
 
 /*
 * Updates the grid visibility for a new player position via a visibility array
@@ -91,7 +90,16 @@ int updateGoldCount(grid_t* playerGrid, int goldDecrease, tuple_t* location);
 * Output: N/A
 *
 */
-void updateVisibility(grid_t* playerGrid, tuple_t* location);
+char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
+
+char* initializeVisibility(grid_t* masterGrid, int row, int col);
+
+bool validSpot(grid_t* masterGrid, int row, int col);
+
+bool isGold(grid_t* grid, tuple_t* location);
+
+int charConvertIndexNum(grid_t* masterGrid, int row, int col);
+
 
 /*
 * Deletes the player's grid by freeing its memory 
@@ -107,5 +115,4 @@ void delete(grid_t* playerGrid);
 * Inputs: a spectator's grid
 * Output: a spectator grid that contains complete visibility of the map
 */
-grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char* playerID, tuple_t* newLocation);
-
+void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition);
