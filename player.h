@@ -134,7 +134,7 @@ void setGold(player_t* player, int gold);
 * input: player
 * output: pointer to the player's socket address
 */
-addr_t* getSocketAddr(player_t* player); 
+addr_t getSocketAddr(player_t* player); 
 
 /**************** setSocketAddr ****************/
 /* set a player's socket address
@@ -142,7 +142,7 @@ addr_t* getSocketAddr(player_t* player);
 * input: player and address of socket
 * output: n/a
 */
-void setSocketAddr(player_t* player, addr_t* socketAddr); 
+void setSocketAddr(player_t* player, const addr_t socketAddr); 
 
 /**************** helper functions ****************/
 
