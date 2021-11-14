@@ -20,32 +20,48 @@ static bool handleInput(void* arg);
 static bool handleMessage(void* arg, const addr_t from, const char* message);
 bool parseArgs(const int argc, char* argv[]);
 
+/* struct definitions */
+typedef struct game 
+{
+  char* host;
+  char* port;
+  char* playerName;
+  char letter;
+  addr_t server;
+  bool isPlayer;
+  int ry, rx;
+  int has, received, unclaimed;
+} game_t;
+
 /* global variables */
-char* host;
-char* port;
-char* playerName;
-addr_t server;
-bool isPlayer;
-int ry, rx;
-char letter;
-int has, received, unclaimed;
+
+game_t game;
+
+//char* host;
+//char* port;
+//char* playerName;
+//addr_t server;
+//bool isPlayer;
+//int ry, rx;
+//char letter;
+//int has, received, unclaimed;
 
 
 int main(const int argc, char* argv[])
 {
   //parse arguments and check to see if player or spectator
-  isPlayer = parseArgs(argc, argv);
+  game.isPlayer = parseArgs(argc, argv);
 
   //assign variables
-  host = argv[1];
-  port = argv[2];
+  game.host = argv[1];
+  game.port = argv[2];
 
-  if (isPlayer) {
-    playerName = argv[3];
+  if (game.isPlayer) {
+    game.playerName = argv[3];
   }
 
   //validate server address
-  if (!message_setAddr(host, port, &server)) {
+  if (!message_setAddr(game.host, game.port, &game.server)) {
     fprintf(stderr, "bad hostname/port\n");
     exit(1);
   }
@@ -53,8 +69,8 @@ int main(const int argc, char* argv[])
   int stringLength;
 
   //ask server to join game as player/spectator
-  if (playerName != NULL) {
-    stringLength = (5 + strlen(playerName));
+  if (game.playerName != NULL) {
+    stringLength = (5 + strlen(game.playerName));
   }
   else {
     stringLength = 9;
@@ -62,17 +78,17 @@ int main(const int argc, char* argv[])
 
   char line[stringLength];
 
-  if (isPlayer) {
-    sprintf(line, "PLAY %s", playerName);
+  if (game.isPlayer) {
+    sprintf(line, "PLAY %s", game.playerName);
   }
   else {
     sprintf(line, "SPECTATE");
   }
     
-  message_send(server, line);
+  message_send(game.server, line);
 
   //start message loop to wait for response
-  bool ok = message_loop(&server, 0, NULL, handleInput, handleMessage);
+  bool ok = message_loop(&game.server, 0, NULL, handleInput, handleMessage);
   message_done();
   
   return ok? 0 : 1;
@@ -111,7 +127,7 @@ static bool handleInput(void* arg)
   char c = getch();
 
     //player can (attempt to) send any letter
-    if (isPlayer) {
+    if (game.isPlayer) {
       if (c != EOF) {
         sprintf(message, "KEY %c", c);
       }
@@ -126,7 +142,7 @@ static bool handleInput(void* arg)
         message = "KEY Q";
       }
     }
-    message_send(server, message);
+    message_send(game.server, message);
     free(message);
 
     return false;
@@ -137,7 +153,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   //get letter representing each player
   if (strncmp(message, "OK ", strlen("OK ")) == 0) {
     char* content = (char*)message + strlen("OK ");
-    sscanf(content, "%c", &letter);
+    sscanf(content, "%c", &game.letter);
   } 
 
   //check to see if screen is big enough to fit grid
@@ -153,14 +169,14 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     start_color();
     init_pair(1, COLOR_RED, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    getmaxyx(stdscr, ry, rx);
+    getmaxyx(stdscr, game.ry, game.rx);
     refresh();
 
     bool tooSmall = true;
-    getmaxyx(stdscr, ry, rx); //get screen size
+    getmaxyx(stdscr, game.ry, game.rx); //get screen size
 
     //if the screen is bigger than the grid:
-    if (ry >= (nrows+1) && rx >= (ncols+1)) {
+    if (game.ry >= (nrows+1) && game.rx >= (ncols+1)) {
       tooSmall = false;
     }
 
@@ -173,11 +189,11 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
         ;
         }
   
-        getmaxyx(stdscr, ry, rx); //get new screen size
-        fprintf(stderr, "%d %d\n", ry, rx);
+        getmaxyx(stdscr, game.ry, game.rx); //get new screen size
+        fprintf(stderr, "%d %d\n", game.ry, game.rx);
 
         //if the screen is bigger than the grid:
-        if (ry >= (nrows + 1) && rx >= (ncols + 1)) {
+        if (game.ry >= (nrows + 1) && game.rx >= (ncols + 1)) {
           tooSmall = false;
         }
         else {
@@ -190,12 +206,12 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   //keep track of the gold that has just been found, the total found gold, and the undiscovered gold
   else if (strncmp(message, "GOLD ", strlen("GOLD ")) == 0) {
-    received = 0;
-    has = 0;
-    unclaimed = 0;
+    game.received = 0;
+    game.has = 0;
+    game.unclaimed = 0;
 
     const char* content = message + strlen("GOLD ");
-    sscanf(content, "%d %d %d", &received, &has, &unclaimed);
+    sscanf(content, "%d %d %d", &game.received, &game.has, &game.unclaimed);
     refresh();
 
   }
@@ -203,28 +219,26 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   //reprint map (and any new messages at the top)
   else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY\n")) == 0) {
     const char* content = message + strlen("DISPLAY\n");
-
     clear();
-    //printf("%d %d %d\n", has, unclaimed, received);
 
     //if it is a player:
-    if (isPlayer) {
+    if (game.isPlayer) {
 
       //if gold has been found on the most recent move:
-      if (received > 0) {
-        printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", letter, has, unclaimed, received);
-        received = 0;
+      if (game.received > 0) {
+        printw("Player %c has %d nuggets (%d nuggets unclaimed). GOLD received: %d\n", game.letter, game.has, game.unclaimed, game.received);
+        game.received = 0;
       }
 
       //if gold has not just been found:
       else {
-        printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", letter, has, unclaimed);
+        printw("Player %c has %d nuggets (%d nuggets unclaimed).\n", game.letter, game.has, game.unclaimed);
       }
     }
 
     //if it is a spectator:
     else {
-      printw("Spectator: %d nuggets unclaimed).\n", unclaimed);
+      printw("Spectator: %d nuggets unclaimed).\n", game.unclaimed);
     }
     
     //print map
