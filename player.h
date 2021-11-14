@@ -11,7 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h> 
-// #include "grid.h"
+#include <unistd.h>
+#include "grid.h"
 #include "tuple.h"
 #include "libcs50/mem.h"
 
@@ -27,7 +28,7 @@ typedef struct player player_t; // opaque to users of the module
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int seed);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed);
 
 /**************** addPlayerGold ****************/
 /* Add gold to a player's gold count 
@@ -111,7 +112,7 @@ char getID(player_t* player);
 * input: player and ID to set 
 * output: n/a
 */
-void setID(player_t* player, char* ID); 
+void setID(player_t* player, const char ID); 
 
 /**************** getVisibility ****************/
 /* get a player's visibility

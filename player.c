@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <ctype.h>
 #include "./support/message.h"
 #include "./tuple.h"
 #include "libcs50/mem.h"
@@ -28,17 +30,17 @@ static const int down = 1;
 /**************** global types ****************/
 typedef struct player{
     char* realName; 
-    char* ID; 
+    char ID; 
     char* visibility; 
     tuple_t* currentPosition; 
     int gold; 
-    addr_t socket; 
+    addr_t* socket; 
 } player_t; 
 
 /**************** global functions ****************/
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int* seed);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed);
 int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 void deletePlayer(player_t* player); 
 
@@ -53,25 +55,27 @@ int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, 
 int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
 
 /**************** getters & setters ****************/
+/* also visible outside this file */
+/* see player.h for comments about exported functions */
 char* getRealName(player_t* player);
 void setRealName(player_t* player, char* realName); 
-char* getID(player_t* player);
-void setID(player_t* player, char* ID);
+char getID(player_t* player);
+void setID(player_t* player, const char ID);
 char* getVisibility(player_t* player);
 void setVisibility(player_t* player, char* visibility); 
 tuple_t* getCurrentPos(player_t* player); 
 void setCurrentPos(player_t* player, tuple_t* currentPosition);
 int getGold(player_t* player);
 void setGold(player_t* player, int gold); 
-addr_t getSocketAddr(player_t* player); 
-void setSocketAddr(player_t* player, addr_t socketAddr);
+addr_t* getSocketAddr(player_t* player); 
+void setSocketAddr(player_t* player, addr_t* socketAddr);
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket, int* seed)
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed)
 {
     // validate inputs aren't null
-    if (realName == NULL || ID == NULL || masterGrid == NULL) {
+    if (realName == NULL || (isalpha(ID) == 0) || masterGrid == NULL) {
         return NULL; 
     }
 
@@ -81,20 +85,16 @@ player_t* initPlayer(char* realName, char* ID, grid_t* masterGrid, addr_t socket
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetX(currentPos), tupleGetY(currentPos)); 
 
-    // TODO - if we use local grids --> initialize player's local grid 
-
     // allocate space and set instance variables
     player_t* player = mem_malloc(sizeof(player_t));
     setRealName(player, realName); 
     setID(player, ID); 
-    // setGrid(player, grid); 
     setVisibility(player, visibility);
     setCurrentPos(player, currentPos); 
-    // setSpectatorStatus(player, spectator); 
     setSocketAddr(player, socket); 
 
     // check everything was initialized correctly 
-    if (getRealName(player) == NULL || getID(player) == NULL ||  getVisibility(player) == NULL || 
+    if (getRealName(player) == NULL || (isalpha(getID(player)) == 0) ||  getVisibility(player) == NULL || 
         getCurrentPos(player) == NULL ) { // TODO: why didn't getSocketAddr(player) == NULL work? 
         return NULL; 
     } 
@@ -226,7 +226,7 @@ int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, 
         setVisibility(player, updatedVisibility);  
 
         // update spectator grid
-        updateSpectatorGrid(spectatorGrid, masterGrid, *getID(player), newPosition, getCurrentPos(player)); 
+        updateSpectatorGrid(spectatorGrid, masterGrid, getID(player), newPosition, getCurrentPos(player)); 
 
         // update player current position
         setCurrentPos(player, newPosition); 
@@ -267,10 +267,6 @@ void deletePlayer(player_t* player)
             mem_free(player->realName); 
         }
 
-        if (getID(player) != NULL) {
-            mem_free(player->ID); 
-        }
-
         if (getVisibility(player) != NULL) {
             mem_free(player->visibility); 
         }
@@ -288,10 +284,10 @@ char* getRealName(player_t* player) { return player->realName; }
 void setRealName(player_t* player, char* realName) { player->realName = realName; }
 
 /**************** getID ****************/
-char* getID(player_t* player) { return player->ID; }
+char getID(player_t* player) { return player->ID; }
 
 /**************** setID ****************/
-void setID(player_t* player, char* ID) { player->ID = ID; }
+void setID(player_t* player, const char ID) { player->ID = ID; }
 
 /**************** getVisibility ****************/
 char* getVisibility(player_t* player) { return player->visibility; }
@@ -312,7 +308,7 @@ int getGold(player_t* player) { return player->gold; }
 void setGold(player_t* player, int gold) { player->gold = gold; }
 
 /**************** getSocketAddr ****************/
-addr_t getSocketAddr(player_t* player) { return player->socket; }
+addr_t* getSocketAddr(player_t* player) { return player->socket; }
 
 /**************** setSocketAddr ****************/
-void setSocketAddr(player_t* player, addr_t socketAddr) { player->socket = socketAddr; }
+void setSocketAddr(player_t* player, addr_t* socketAddr) { player->socket = socketAddr; }

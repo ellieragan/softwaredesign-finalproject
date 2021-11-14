@@ -4,13 +4,7 @@
 * Jeffrey Liu, November 2021
 */
 
-typedef struct grid{
-    char* filemap;
-    int rows;
-    int cols;
-    int gold;
-    int goldLeft;
-}grid_t; 
+typedef struct grid grid_t; 
 
 /*
 * Reads the input map from the server module and the seed to create the map. Sets

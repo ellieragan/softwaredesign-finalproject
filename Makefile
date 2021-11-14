@@ -3,29 +3,33 @@
 # Donia Tung
 # CS50, Fall 2021
 
-L = ./libcs50
-S = ./support
+L = libcs50
+S = support
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
 
 OBJS = tuple.o # player.o grid.o 
-LIBS = $L/libcs50-given.a -lcurses -lm#$C/common.a
+LIBS = $S/support.a $L/libcs50-given.a -lcurses -lm#$C/common.a
 
 .PHONY: all clean
 
-all: client
+all: playertest
+
+playertest.o: tuple.o grid.o player.o player.h
+playertest: playertest.o
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
 tuple.o: tuple.h
 
 tuple: tuple.o # $(LIBS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-grid.o: tuple.h grid.h
+grid.o: tuple.o grid.h
 
 grid: grid.o $(LIBS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-player.o: tuple.h grid.h player.h
+player.o: tuple.o grid.o player.h
 
 player: player.o $(LIBS)
 	$(CC) $(CFLAGS) $^ -o $@
@@ -34,7 +38,6 @@ test:
 	bash -v testing.sh >& testing.out
 
 clean:
-	rm -f client
 	rm -f *~ *.o
 	rm -rf *.dSYM
 	rm -f core

@@ -14,6 +14,7 @@
 #include "./libcs50/file.h"
 #include "./libcs50/mem.h"
 #include "./tuple.h"
+#include "./grid.h"
 
 typedef struct grid
 {
