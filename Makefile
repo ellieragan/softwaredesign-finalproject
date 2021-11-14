@@ -1,4 +1,4 @@
-#Makefile for crawler
+#Makefile for client
 #Ellie Boyd
 #CS 50
 
@@ -28,3 +28,4 @@ clean:
 	rm -f *~ *.o
 	rm -rf *.dSYM
 	rm -f core
+	rm -f vgcore.*
