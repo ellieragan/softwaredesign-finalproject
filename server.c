@@ -21,7 +21,7 @@ static char** parseMsg(char* msg);
 static int countPlayers(player_t** players);
 static bool ifEmpty(char* str);
 static char* processName(char* name);
-static char* getID(int playerIndex);
+static char* playerID(int playerIndex);
 static bool validKey(char key, bool spectator);
 static int getPlayerin(player_t** players, addr_t* from);
 static char* getDisplay(player_t* player);
@@ -150,7 +150,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
     // otherwise, add player to game
     else{
-      char* playerID = getID(*index);
+      char* playerID = playerID(*index);
 
       // initialize player and place into players array
       players[*index] = initPlayer(processName(msgRest),playerID,masterGrid,from,*seed);
@@ -399,11 +399,11 @@ static char* processName(char* name){
   return name;
 }
 
-/* getID
+/* playerID
  * Helper function for handleMsg
  * Gets player ID
  */
-static char* getID(int playerIndex){
+static char* playerID(int playerIndex){
   char ID = "A";
   int pos = 0;
   while (pos < playerIndex){
@@ -473,7 +473,7 @@ static char* endMessage(player_t** players){
   for (pos = 0; pos<index; pos++){
     if (players[pos] != NULL){
       char* newLine = malloc(sizeof(char)*100); // 100 chars per line will be more than enough space
-      sprintf(newLine,"\n%s %6d %s",getID(pos),getGold(players[pos]),getRealName(players[pos]));
+      sprintf(newLine,"\n%s %6d %s",playerID(pos),getGold(players[pos]),getRealName(players[pos]));
       char* newMsg = malloc(sizeof(msg)+sizeof(newLine)+10);
       sprintf(newMsg,"%s%s",msg,newLine);
       free(msg);
