@@ -66,7 +66,7 @@ tuple_t* getCurrentPos(player_t* player);
 void setCurrentPos(player_t* player, tuple_t* currentPosition);
 int getGold(player_t* player);
 void setGold(player_t* player, int gold); 
-addr_t getSocketAddr(player_t* player); 
+const addr_t getSocketAddr(player_t* player); 
 void setSocketAddr(player_t* player, const addr_t socketAddr);
 
 
@@ -259,13 +259,14 @@ void deletePlayer(player_t* player)
 {
     if (player != NULL) {
         if (getRealName(player) != NULL) {
-            mem_free(player->realName); 
+            // free(player->realName); 
         }
 
         if (getVisibility(player) != NULL) {
             mem_free(player->visibility); 
         }
         // TODO: only question is whether or not we need to delete/free the tuple
+        mem_free(player); 
     }
 }
 
@@ -303,7 +304,7 @@ int getGold(player_t* player) { return player->gold; }
 void setGold(player_t* player, int gold) { player->gold = gold; }
 
 /**************** getSocketAddr ****************/
-addr_t getSocketAddr(player_t* player) { return player->socket; }
+const addr_t getSocketAddr(player_t* player) { return player->socket; }
 
 /**************** setSocketAddr ****************/
 void setSocketAddr(player_t* player, const addr_t socketAddr) { player->socket = socketAddr; }
