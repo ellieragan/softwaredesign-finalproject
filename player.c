@@ -34,13 +34,13 @@ typedef struct player{
     char* visibility; 
     tuple_t* currentPosition; 
     int gold; 
-    addr_t* socket; 
+    addr_t socket; 
 } player_t; 
 
 /**************** global functions ****************/
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket);
 int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 void deletePlayer(player_t* player); 
 
@@ -49,7 +49,6 @@ void deletePlayer(player_t* player);
 tuple_t* getRandomPosition(grid_t* grid); 
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
 void addPlayerGold(player_t* player, int goldCollected); 
-tuple_t* determineNewPosition(player_t* player, char keyPressed); 
 tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY);
 int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
 int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
@@ -67,12 +66,12 @@ tuple_t* getCurrentPos(player_t* player);
 void setCurrentPos(player_t* player, tuple_t* currentPosition);
 int getGold(player_t* player);
 void setGold(player_t* player, int gold); 
-addr_t* getSocketAddr(player_t* player); 
-void setSocketAddr(player_t* player, addr_t* socketAddr);
+addr_t getSocketAddr(player_t* player); 
+void setSocketAddr(player_t* player, const addr_t socketAddr);
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed)
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket)
 {
     // validate inputs aren't null
     if (realName == NULL || (isalpha(ID) == 0) || masterGrid == NULL) {
