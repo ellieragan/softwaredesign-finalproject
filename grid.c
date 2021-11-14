@@ -469,7 +469,7 @@ bool validSpot(grid_t* masterGrid, int row, int col)
 
 bool isGold(grid_t* grid, tuple_t* location)
 {
-    int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
+    int index = charConvertIndexNum(grid, tupleGetY(location), tupleGetX(location)); 
     return (grid->filemap[index] == pile); 
 }
 

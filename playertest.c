@@ -26,9 +26,11 @@ grid_t* masterGrid;
 grid_t* spectatorGrid; 
 
 /**************** testing functions ****************/
-void testWorkingPlayerInit();  
-void testInvalidPlayerInit(); 
+void testWorkingPlayerInit(grid_t* grid);  
+void testInvalidNamePlayerInit(grid_t* grid); 
+void testInvalidGridPlayerInit(); 
 void testValidPlayerStep(); 
+void testValidPlayerSprint(); 
 void testPlayerCollectingGold();  
 void testOutOfBoundsPlayerMove();
 void testWallPlayerMove(); 
@@ -47,30 +49,31 @@ int main(const int argc, char* argv[]){
     spectatorGrid = grid_new("./maps/visdemo.txt", seed);
     buildPiles(seed, spectatorGrid); 
 
-    // printf("test random position: \n"); 
-    // randomPos(masterGrid, seed);
-
     // testing playerInit
     printf("Testing playerInit with valid inputs: \n"); 
     testWorkingPlayerInit(masterGrid); 
-    printf("playerInit with valid inputs test done\n"); 
+    printf("playerInit with valid inputs test done\n\n"); 
 
-    // printf("Testing playerInit with invalid inputs: \n"); 
-    // testInvalidPlayerInit(); 
-    // printf("playerInit with invalid inputs test done \n"); 
+    printf("Testing playerInit with invalid name input: \n"); 
+    testInvalidNamePlayerInit(masterGrid); 
+    printf("playerInit with invalid input name test done \n"); 
+
+    printf("Testing playerInit with invalid grid: \n"); 
+    testInvalidGridPlayerInit(); 
+    printf("playerInit with invalid grid test done \n"); 
     printf("------------------------------------------\n\n");
     
     // testing handlePlayerMove
-    player_t* player = initPlayer(realname, ID, masterGrid, address, NULL);
+    player_t* player = initPlayer(realname, ID, masterGrid, address);
     tuple_t* playerPosition = initTuple(5, 3); 
     setCurrentPos(player, playerPosition); 
 
     printf("Testing handlePlayerMove with a valid step: \n"); 
-    testValidPlayerStep(player, masterGrid), spectatorGrid; 
+    testValidPlayerStep(player, masterGrid, spectatorGrid); 
     printf("handlePlayerMove with a valid step test done \n\n"); 
 
     printf("Testing handlePlayerMove with a valid sprint: \n"); 
-    testValidPlayerSprint(player, masterGrid), spectatorGrid; 
+    testValidPlayerSprint(player, masterGrid, spectatorGrid); 
     printf("handlePlayerMove with a valid sprint test done \n\n"); 
 
     // printf("Testing valid handlePlayerMove with collecting gold: \n"); 
@@ -98,28 +101,32 @@ int main(const int argc, char* argv[]){
 
 }
 
-void randomPos(grid_t* grid, int seed)
-{
-    getRandomPosition(grid, seed);
-}
-
 void testWorkingPlayerInit(grid_t* grid)
 {
-
     printf("Initializing player... \n"); 
-    player_t* player = initPlayer(realname, ID, masterGrid, address, seed); 
+    player_t* player = initPlayer(realname, ID, masterGrid, address); 
     if (player == NULL) {
         fprintf(stderr, "Initializing working player failed\n"); 
         return; 
     }
 }
 
-void testInvalidPlayerInit(grid_t* grid) 
+void testInvalidNamePlayerInit(grid_t* grid) 
 {
     printf("Initializing player... \n"); 
-    player_t* player = initPlayer(realname, ID, masterGrid, NULL, seedPtr); 
+    player_t* player = initPlayer(NULL, ID, masterGrid, address); 
     if (player == NULL) {
-        fprintf(stderr, "Initializing working player failed\n"); 
+        printf("Invalid name inputs test passed\n"); 
+        return; 
+    }
+}
+
+void testInvalidGridPlayerInit() 
+{
+    printf("Initializing player... \n"); 
+    player_t* player = initPlayer(realname, ID, NULL, address); 
+    if (player == NULL) {
+        printf("Invalid grid inputs test passed\n"); 
         return; 
     }
 }

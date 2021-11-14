@@ -71,7 +71,7 @@ void setSocketAddr(player_t* player, const addr_t socketAddr);
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket)
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket)
 {
     // validate inputs aren't null
     if (realName == NULL || (isalpha(ID) == 0) || masterGrid == NULL) {
@@ -111,7 +111,7 @@ tuple_t* getRandomPosition(grid_t* grid)
     int y = rand() % (numCols + 1); 
 
     tuple_t* tuple = initTuple(x, y); 
-    while (! validSpot(grid, x, y)) {
+    while (! validSpot(grid, y, x)) {
         x = rand() % (numRows + 1); 
         y = rand() % (numCols + 1);
         tuple = initTuple(x, y); 
@@ -303,7 +303,7 @@ int getGold(player_t* player) { return player->gold; }
 void setGold(player_t* player, int gold) { player->gold = gold; }
 
 /**************** getSocketAddr ****************/
-addr_t* getSocketAddr(player_t* player) { return player->socket; }
+addr_t getSocketAddr(player_t* player) { return player->socket; }
 
 /**************** setSocketAddr ****************/
-void setSocketAddr(player_t* player, addr_t* socketAddr) { player->socket = socketAddr; }
+void setSocketAddr(player_t* player, const addr_t socketAddr) { player->socket = socketAddr; }
