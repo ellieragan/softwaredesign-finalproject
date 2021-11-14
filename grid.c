@@ -34,9 +34,9 @@ static const int maxGold = 30;
 static const int totalGold = 250;
 //static const int maxPlayers = 26;
 
-static const int vis = 1; 
-static const int alrVis = 2;
-static const int notVis = 3;
+static const char vis = '1'; 
+static const char alrVis = '2';
+static const char notVis = '3';
 
 
 grid_t* grid_new(char* filename, int seed);
@@ -49,9 +49,9 @@ int getGoldLeft(grid_t* masterGrid);
 void buildPiles(int seed, grid_t* masterGrid);
 int updateGoldCount(grid_t* masterGrid, tuple_t* position);
 void buildUpdatedVisibility(char* updatedVis);
-char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
-bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
-bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid);
+char* updateVisibility(grid_t* masterGrid, int colCord, int owCord, char* visibility); 
+bool colCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid);
+bool rowCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid);
 float slopeCalc(int r, int c, int row, int col);
 float interceptCalc(int r, int c, float slope);
 bool validSpot(grid_t* masterGrid, int row, int col);
@@ -89,11 +89,16 @@ grid_t* grid_new(char* filename, int seed)
         free(cols);
         fclose(fp);
     }
+    else
+    {
+        return NULL;
+    }
 
-    char start[colNum * rowNum];
+    char start[colNum*rowNum + 10];
     int totalCount = 0;
     int roomCount = 0;
     char temp;
+    fp = fopen(filename, "r");
     while((temp = fgetc(fp)) != EOF)
     {
         start[totalCount] = temp; 
@@ -114,13 +119,13 @@ grid_t* grid_new(char* filename, int seed)
 }
 
 /*
-*
+* Method serves as a helper for the grid 
 *
 *
 */
 grid_t* grid_newHelper(char* fileMap, int rows, int cols)
 {
-    char* fileMapHold = malloc((rows * cols + 10) * sizeof(char));
+    char* fileMapHold = malloc((rows * cols) + (10 * sizeof(char)));
     if(fileMapHold != NULL)
     {
         strcpy(fileMapHold, fileMap);        
@@ -145,10 +150,9 @@ grid_t* grid_newHelper(char* fileMap, int rows, int cols)
 */
 char* getFileMap(grid_t* masterGrid)
 {
-    if(masterGrid != NULL)
+    if(masterGrid != NULL && masterGrid -> filemap != NULL)
     {
-        char* fileMap = masterGrid -> filemap;
-        return fileMap;
+        return masterGrid -> filemap;
     }
     return NULL; 
 }
@@ -312,27 +316,37 @@ void buildUpdatedVisibility(char* updatedVis)
 * Output: N/A
 *
 */
-char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility)
+char* updateVisibility(grid_t* masterGrid, int colCord, int rowCord, char* visibility)
 {
     char* updatedVis = malloc(strlen(visibility) + 1);
     strcpy(updatedVis, visibility);
 
     buildUpdatedVisibility(updatedVis);
-
+    
     if(masterGrid != NULL)
     {
-        for(int r = 1; r < masterGrid -> rows; r++)
+        for(int col = 1; col < masterGrid -> cols; col++)
         {
-            for(int c = 1; c < masterGrid -> cols; c++)
+            for(int row = 1; row < masterGrid -> rows + 1; row++)
             {
-                float slope = slopeCalc(r, c, rowCord, colCord);
-                float intercept = interceptCalc(r, c, slope);
-                int index = (r - 1) * masterGrid -> cols + c - 1;
-                bool visible;
-                visible = rowCheck(r, c, rowCord, colCord, slope, intercept, masterGrid); 
-                visible = colCheck(r, c, rowCord, colCord, slope, intercept, masterGrid);
+                float slope = slopeCalc(row, col, rowCord, colCord);
 
-                if(visible)
+                float intercept = interceptCalc(row, col, slope);
+
+                int index = (row - 1) * masterGrid -> cols + (col - 1);
+                bool visibleRow;
+                bool visibleCol;
+                bool visibleBoth = false;
+
+                visibleRow = rowCheck(row, col, rowCord, colCord, slope, intercept, masterGrid); 
+                visibleCol = colCheck(row, col, rowCord, colCord, slope, intercept, masterGrid);
+               
+                if(visibleCol && visibleRow)
+                {
+                    visibleBoth = true; 
+                }
+
+                if(visibleBoth)
                 {
                     updatedVis[index] = vis;
                 }
@@ -348,35 +362,28 @@ char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visib
  
 
 /*
-*
-*
-*
+* Checks the points in between the column of the iteration and the column coordinate
+* of the player to determine visibility. Helper function for update visibility
+* Inputs: Two sets of row and column values, the slope, the intercept, and the grid.
+* Outputs: true if valid spots; otherwise, false
 *
 */
-bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid)
+bool colCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid)
 {
-    int ctemp = c; 
-    while(ctemp != col) //Iterates until reaches grid's column 
+    int ctemp = col; 
+    while(ctemp != colCord) //Iterates until reaches grid's column 
     {
-        if(ctemp != c) //As long as not observing current col spot
+        if(ctemp != col) //As long as not observing current col spot
         {
-            float curRow;
-            if(r == row)
-            {
-                curRow = (ctemp - intercept)/slope;
-            }
-            else
-            {
-                curRow = (float)r;
-            }
+            float curRow = (ctemp * slope) + intercept;
             int low = (int) curRow;
             int high = (int) ceil(curRow);
-            if(!validSpot(masterGrid, ctemp, high) && !validSpot(masterGrid, ctemp, low))
+            if(!validSpot(masterGrid, high, ctemp) && !validSpot(masterGrid, low, ctemp))
             {
                 return false; 
             }
         }
-        if(ctemp <= col)
+        if(ctemp < colCord)
         {
             ctemp++; 
         }
@@ -389,31 +396,31 @@ bool colCheck(int r, int c, int row, int col, float slope, float intercept, grid
 }
 
 /*
+* Checks the points in between the row of the iteration and the row coordinate
+* of the player to determine visibility. Helper function for update visibility
+* Inputs: Two sets of row and column values, the slope, the intercept, and the grid.
+* Outputs: true if valid spots; otherwise, false
 */
-bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid_t* masterGrid)
+bool rowCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid)
 {
-    int rtemp = r; 
-    while(rtemp != row)
+    int rtemp = row; 
+    while(rtemp != rowCord)
     {
-        if(rtemp != r)
+        if(rtemp != row)
         {
-            float curCol;
-            if(c == col)
+            float curCol = (float)col;
+            if(col != colCord)
             {
                 curCol = (rtemp - intercept)/slope;
             }
-            else
-            {
-                curCol = (float)c;
-            }
             int low = (int) curCol;
             int high = (int) ceil(curCol);
-            if(!validSpot(masterGrid, high, rtemp) && !validSpot(masterGrid, low, rtemp))
+            if(!validSpot(masterGrid, rtemp, high) && !validSpot(masterGrid, rtemp, low))
             {
                 return false; 
             }
         }
-        if(rtemp <= row)
+        if(rtemp < rowCord)
         {
             rtemp++; 
         }
@@ -427,6 +434,9 @@ bool rowCheck(int r, int c, int row, int col, float slope, float intercept, grid
 
 
 /*
+* Calculates the slope.
+* Input: Two sets of row and column values
+* Output: A float that represents the slope
 */
 float slopeCalc(int r, int c, int row, int col)
 {
@@ -435,14 +445,21 @@ float slopeCalc(int r, int c, int row, int col)
 }
 
 /*
+* Calculates the intercept.
+* Input: A row and column value, the slope.
+* Output: the intercept
 */
 float interceptCalc(int r, int c, float slope)
 {
-    float intercept = (float) ((float)(r - (slope * (float)c)));
+    float intercept = (float)r - (slope * (float)c);
     return intercept;
 }
 
-
+/*
+* Checks whether a spot is a valid.
+* Inputs: The master a grid, a row and column value
+* Output: true if the spot is valid; otherwise, false.
+*/
 bool validSpot(grid_t* masterGrid, int row, int col)
 {
     int index = (row - 1) * masterGrid -> cols + col - 1;
@@ -477,6 +494,11 @@ void delete(grid_t* masterGrid)
 
 
 /*
+* Initializes a visibility array that keeps track of a player's visibiility.
+*
+* Input: the mastergrid, the row, and column
+* Output: a visibility array
+*
 */
 char* initializeVisibility(grid_t* masterGrid, int row, int col)
 {
@@ -554,13 +576,17 @@ char* charConvertIndex(grid_t* masterGrid, char** gridMap)
 
 
 /*
+* Method that converts a row and column coordinate into an one-dimensional index for 
+* the input purposes of a filemap. 
 *
+* Inputs: a master grid, the row coordinate of a player, the column coordinate of a player
+* Output: an integer that represents an index 
 */
-int charConvertIndexNum(grid_t* masterGrid, int row, int col)
+int charConvertIndexNum(grid_t* masterGrid, int col, int row)
 {
     if(masterGrid != NULL)
     {
-        return (masterGrid -> cols) * (row - 1) + col -1;
+        return (row - 1) * masterGrid -> cols + (col -1);
     }
     return -1; 
 }
