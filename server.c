@@ -25,7 +25,7 @@ static char** parseMsg(char* msg);
 static int countPlayers(player_t** players);
 static bool ifEmpty(char* str);
 static char* processName(char* name);
-static char* playerID(int playerIndex);
+static char playerID(int playerIndex);
 static bool validKey(char key, bool spectator);
 static int getPlayerin(player_t** players, addr_t* from);
 static char* getDisplay(player_t* player);
@@ -162,10 +162,10 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
     // otherwise, add player to game
     else{
-      char* playerID = playerID(*index);
+      char playerID = playerID(*index);
 
       // initialize player and place into players array
-      players[*index] = initPlayer(processName(msgRest),playerID,masterGrid,from,*seed);
+      players[*index] = initPlayer(processName(msgRest),playerID,masterGrid,from,seed);
       
       // construct and send OK message to client
       char okMsg[6]; // OK + space + ID + \0 + extra char
@@ -415,14 +415,14 @@ static char* processName(char* name){
  * Helper function for handleMsg
  * Gets player ID
  */
-static char* playerID(int playerIndex){
-  char ID = "A";
+static char playerID(int playerIndex){
+  char ID = 'A';
   int pos = 0;
   while (pos < playerIndex){
     ID++;
     pos++;
   }
-  return &ID;
+  return ID;
 }
 
 /* validKey

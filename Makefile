@@ -31,10 +31,10 @@ all:
 tuple: tuple.h
 	$(CC) $(CFLAGS) $^ -o $@
 
-grid:grid.o tuple.o $(LLIBS)
+grid: grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
-player:	player.o grid.o tuple.o $(LLIBS)
+player: player.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 #playertest: playertest.o player.o grid.o tuple.o $(LLIBS)
