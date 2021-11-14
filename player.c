@@ -20,7 +20,7 @@
 
 /**************** file-local global variables ****************/
 static const int left = -1; 
-static const int right = -1; 
+static const int right = +1; 
 static const int up = -1; 
 static const int down = 1; 
 
@@ -46,7 +46,7 @@ void deletePlayer(player_t* player);
 
 /**************** local functions ****************/
 /* not visible outside this file */
-tuple_t* getRandomPosition(grid_t* grid, int seed); 
+tuple_t* getRandomPosition(grid_t* grid); 
 bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
 void addPlayerGold(player_t* player, int goldCollected); 
 tuple_t* determineNewPosition(player_t* player, char keyPressed); 
@@ -80,7 +80,7 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* 
     }
 
     // randomly select a position for the player
-    tuple_t* currentPos = getRandomPosition(masterGrid, seed); 
+    tuple_t* currentPos = getRandomPosition(masterGrid); 
 
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetX(currentPos), tupleGetY(currentPos)); 
@@ -103,19 +103,10 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* 
 }
 
 /**************** positionInit ****************/
-tuple_t* getRandomPosition(grid_t* grid, int seed)
+tuple_t* getRandomPosition(grid_t* grid)
 {
     int numRows = getRows(grid); 
     int numCols = getCols(grid); 
-
-    if (seed == -1) {
-        srand(getpid()); 
-    } 
-    else {
-        // printf("here");
-        // int seedInt = *seed; 
-        // srand(seedInt); 
-    }
 
     int x = rand() % (numRows + 1); 
     int y = rand() % (numCols + 1); 
@@ -137,10 +128,10 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
 
     // validate within bounds 
     if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
-
+   
     // validate not a wall
     if (! validSpot(grid, y, x)) { return false; }
-
+    
     // validate no other player is there
     if (players != NULL) {
         for (int i = 0; i < 26; i++) { // TODO - may need if statement so that the current player isn't being checked here
@@ -237,7 +228,6 @@ int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, 
         // update player current position
         setCurrentPos(player, newPosition); 
     } 
-
     return goldCollected; 
 
 }
@@ -252,6 +242,7 @@ int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid
     while (checkValidMove(spectatorGrid, nextPosition, players)) {
         // call playerStep 
         goldCollected += playerStep(player, deltaX, deltaY, spectatorGrid, masterGrid, players);
+        nextPosition = getNextPosition(getCurrentPos(player), deltaX, deltaY);
     }
 
     return goldCollected; 
