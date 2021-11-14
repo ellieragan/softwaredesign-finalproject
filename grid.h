@@ -22,7 +22,7 @@ int getCols(grid_t* masterGrid);
 int getNumPiles(grid_t* masterGrid);
 int getGoldLeft(grid_t* masterGrid);
 void buildPiles(int seed, grid_t* masterGrid);
-int updateGoldCount(grid_t* masterGrid, int seed, int colCord, int rowCord);
+int updateGoldCount(grid_t* masterGrid, tuple_t* position);
 void buildUpdatedVisibility(char* updatedVis);
 char* updateVisibility(grid_t* masterGrid, int colCord, int owCord, char* visibility); 
 bool colCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid);
