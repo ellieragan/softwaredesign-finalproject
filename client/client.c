@@ -12,7 +12,7 @@
 #include <sys/select.h>
 #include <ncurses.h>
 #include <ctype.h>
-#include "support/message.h"
+#include "message.h"
 
 
 /* functions */
@@ -36,15 +36,6 @@ typedef struct game
 /* global variables */
 
 game_t game;
-
-//char* host;
-//char* port;
-//char* playerName;
-//addr_t server;
-//bool isPlayer;
-//int ry, rx;
-//char letter;
-//int has, received, unclaimed;
 
 
 int main(const int argc, char* argv[])
