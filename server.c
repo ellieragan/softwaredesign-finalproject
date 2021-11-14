@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include "player.h"
 #include "grid.h"
+#include "../message.h"
 
 // function declarations
 static void parseArgs(const int argc, char* argv[]);
