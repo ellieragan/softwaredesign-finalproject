@@ -11,9 +11,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "player.h"
+#include "message.h"
+#include "tuple.h"
 #include "grid.h"
-#include "../message.h"
+#include "player.h"
+#include "./libcs50/hashtable.h"
+
 
 // function declarations
 static void parseArgs(const int argc, char* argv[]);
@@ -36,8 +39,8 @@ int maxPlayers = 26;
 int main(const int argc, char* argv[]){
   parseArgs(argc, argv);
 
-  char* map = NULL;
-  int seed = NULL;
+  char* map;
+  int seed = -1;
 
   if (argc == 2){
     map = argv[1];
@@ -124,7 +127,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
   player_t** players = hashtable_find(arg, "players");
   grid_t* spectator = hashtable_find(arg, "spectator");
   addr_t* spectAddr = hashtable_find(arg, "spectAddr");
-  int* index = hashtble_find(arg,"index");
+  int* index = hashtable_find(arg,"index");
   int* seed = hashtable_find(arg,"seed");
 
   // handles case when all gold has been collected
@@ -132,7 +135,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     char* endGame = endMessage(players);
     // send endGame message to all players
     int pos;
-    for (pos = 0; pos<index; pos++){
+    for (pos = 0; pos<*index; pos++){
       if (players[pos] != NULL){
         deletePlayer(players[pos]);
         message_send(getSocketAddr(players[pos]),endGame);
@@ -142,7 +145,9 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     return true; // terminates loop
   }
 
-  char** msgParts = parseMsg(message);
+  char msgCpy[strlen(message)+1];
+  strcpy(msgCpy,message);
+  char** msgParts = parseMsg(msgCpy);
   char* msgType = msgParts[0];
   char* msgRest = msgParts[1];
 
@@ -437,7 +442,7 @@ static bool validKey(char key, bool spectator){
   // if is player
   else{
     bool valid = false;
-    char validKeys[17] = {"Q","h","H","l","L","j","J","k","K","y","Y","u","U","b","B","n","N"};
+    char validKeys[17] = {'Q','h','H','l','L','j','J','k','K','y','Y','u','U','b','B','n','N'};
     int index;
     for (index = 0; index < 17; index++){
       if (key == validKeys[index]){
