@@ -26,6 +26,7 @@ static bool validKey(char key, bool spectator);
 static int getPlayerin(player_t** players, addr_t* from);
 static char* getDisplay(player_t* player);
 static char* endMessage(player_t** players);
+void hashDel(void* item);
 
 // global constants
 int maxNamelength = 50;
@@ -60,7 +61,7 @@ int main(const int argc, char* argv[]){
   int index = 0;
 
   // helps pass 3 things into arg of message_loop
-  hashtable_t* args = hashtable_new(2);
+  hashtable_t* args = hashtable_new(6);
   hashtable_insert(args, "masterGrid", masterGrid);
   hashtable_insert(args, "players", players);
   hashtable_insert(args, "spectator", spectator);
@@ -71,6 +72,11 @@ int main(const int argc, char* argv[]){
   message_init(stderr);
   message_loop(args, 0, NULL, NULL, handleMsg);
   message_done();
+  delete(masterGrid);
+  free(players);
+  delete(spectator);
+  hashtable_delete(args,hashDel);
+  return 0;
 }
 
 /* parseArgs
@@ -482,4 +488,14 @@ static char* endMessage(player_t** players){
     }
   }
   return msg;
+}
+
+/* hashDel
+ * Delete function for hashtable_delete
+ * Deletes item if not NULL
+ */
+void hashDel(void* item){
+  if (item != NULL){
+    free(item);
+  }
 }
