@@ -1,7 +1,9 @@
 /* client.c
  * client for nuggets
- * Ellie Boyd
- * Nov 6 2021
+ * 
+ * team 7: Gitting an A
+ * (Ellie Boyd, Jeffrey Liu, Brian Ng, Donia Tung)
+ * CS50 21F
  */
 
 #include <stdio.h>
@@ -113,7 +115,7 @@ bool parseArgs(const int argc, char* argv[])
 
 static bool handleInput(void* arg) 
 {
-  //use ncurses to make key input into something the server can deal with
+  //gets key input
   char* message = malloc(7);
   char c = getch();
 
