@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "player.h"
-// #include "grid.h"
+#include "grid.h"
 
 // function declarations
 static void parseArgs(const int argc, char* argv[]);
@@ -127,9 +127,11 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     int pos;
     for (pos = 0; pos<index; pos++){
       if (players[pos] != NULL){
+        deletePlayer(players[pos]);
         message_send(getSocketAddr(players[pos]),endGame);
       }
     }
+    free(endGame);
     return true; // terminates loop
   }
 
@@ -174,11 +176,13 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       message_send(from, &goldMsg);
 
       // construct and send DISPLAY message to clients
-      char* displayStr = getDisplay(players[*index]); // ask donia about this
+      char* displayStr = getDisplay(players[*index]);
 
       char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
       sprintf(displayMsg, "DISPLAY\n%s", displayStr);
       message_send(from, &displayMsg);
+      
+      free(displayStr);
 
       *index++; // add to index count
     }
@@ -215,22 +219,24 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     sprintf(displayMsg, "DISPLAY\n%s", displayStr);
     message_send(from, &displayMsg);
 
+    free(displayStr);
+
     return false; // continue loop
   }
 
   if (strcmp(msgType, "KEY")){ // KEY type messages
-    // find player in question
-    player_t* player = players[getPlayerin(players,from)];
-
     // if client is player
     if (!message_eqAddr(from,spectAddr)){ // if not spectator
+      // find player in question
+      player_t* player = players[getPlayerin(players,from)];
       // if key is valid
-      if (validKey(&msgRest,false)){
+      if (validKey(msgRest[0],false)){
         // if it is a movement key
         if (strcmp(msgRest,"Q")!=0){
           /******************************* Dealing with player *************************************/
           // update player grid and send new display to player
-          movePlayer(player,masterGrid,msgRest,players);
+          char key = msgRest[0]; // cast as char
+          movePlayer(player,masterGrid,spectator,key,players);
           int playerIndex = getPlayerin(players, from);
           
           // construct and send GRID message to client
@@ -295,7 +301,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     // if client is spectator
     else{
       // if key is valid
-      if (validKey(&msgRest,true)){
+      if (validKey(msgRest[0],true)){
         // only possible key is Q
         if (strcmp(msgRest,"Q") == 0){
           message_send(from,"QUIT Thanks for watching!");
@@ -313,6 +319,9 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     message_send(from, "ERROR Invalid message type.");
     return false; // continue loop
   }
+  free(msgType);
+  free(msgRest);
+  free(msgParts);
 }
 
 /* parseMsg
@@ -326,13 +335,16 @@ static char** parseMsg(char* msg){
   msgParts[0] = msg;
 
   char* ptr = msg;
-  while(!isspace(*ptr)){ // slide to first space
+  while(!isspace(*ptr) && (strcmp(*ptr,"\0") != 0)){ // slide to first space or end of msg
     ptr++;
   }
   if (isspace(*ptr)){ // break message into 2 parts
     ptr = "\0";
     ptr++;
     msgParts[1] = ptr;
+  }
+  else{ // if there is only 1 part
+    msgParts[2] = NULL;
   }
 
   return msgParts;
@@ -393,9 +405,10 @@ static char* processName(char* name){
  */
 static char* getID(int playerIndex){
   char ID = "A";
-  int pos;
-  for (pos = 0; pos < playerIndex; pos++){
+  int pos = 0;
+  while (pos < playerIndex){
     ID++;
+    pos++;
   }
   return &ID;
 }
