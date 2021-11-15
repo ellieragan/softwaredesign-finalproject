@@ -592,7 +592,7 @@ int charConvertIndexNum(grid_t* masterGrid, int col, int row)
 }
 
 /**************** gridFromVisibility ****************/
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position)
 {
     if (masterGrid == NULL || playerVisibility == NULL) { return NULL; }
 
@@ -625,6 +625,8 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
             gridDisplay[i] = ' '; 
         }
     }
+    int index = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
+    gridDisplay[index] = '@'; 
 
     return gridDisplay; 
 }
