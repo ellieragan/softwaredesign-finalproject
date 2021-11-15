@@ -191,6 +191,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
       // initialize player and place into players array
       players[*index] = initPlayer(processName(msgRest),ID,masterGrid,from,spectator);
+      //addPlayerToSpectatorGrid(spectator,masterGrid,ID,getCurrentPos(p
       
       // construct and send OK message to client
       char okMsg[6]; // OK + space + ID + \0 + extra char
@@ -236,10 +237,12 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     //strcpy(msgR,content);
     //char* msgRest = m
     if (message_isAddr(spectAddr->spectator)){ // replace existing spectator address with new one
+      printf("Spectstored\n");
       message_send(spectAddr->spectator,"QUIT You have been replaced by a new spectator.");
       spectAddr = spectCast_new(from);
     }
     if (!message_isAddr(spectAddr->spectator)){ // just allocate spectator address
+      printf("Spectstored\n");
       spectAddr = spectCast_new(from);
     }
     
@@ -309,7 +312,8 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
           // construct and send DISPLAY message to clients
           char* visibilityStr = getVisibility(players[playerIndex]);
           char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr,getCurrentPos(players[playerIndex]));
-
+          
+          printf("beforePast\n1");
           char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
           sprintf(displayMsg, "DISPLAY\n%s", displayStr);
           const char* displayMessage = displayMsg;
@@ -317,32 +321,33 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
 
           /***************************** Dealing with spectator *********************************/
-          if (spectAddr != NULL){
+          //if (message_isAddr(spectAddr->spectator)){
+            printf("getPast\n");
             // construct and send GRID message to client
-            int nrows = getRows(spectator);
-            int ncols = getCols(spectator);
+            int Snrows = getRows(spectator);
+            int Sncols = getCols(spectator);
 
-            char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
-            sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-            const char* gridMessage = gridMsg;
-            message_send(spectAddr->spectator, gridMessage);
+            char SgridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
+            sprintf(SgridMsg,"GRID %d %d",Snrows,Sncols);
+            const char* SgridMessage = SgridMsg;
+            message_send(spectAddr->spectator, SgridMessage);
 
             // construct and send GOLD message to clients
-            int remain = getGoldLeft(spectator);
+            int Sremain = getGoldLeft(spectator);
 
-            char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
-            sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
-            const char* goldMessage = goldMsg;
-            message_send(spectAddr->spectator, goldMessage);
+            char SgoldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
+            sprintf(SgoldMsg, "GOLD %d %d %d",0,0,Sremain);
+            const char* SgoldMessage = SgoldMsg;
+            message_send(spectAddr->spectator, SgoldMessage);
 
             // construct and send DISPLAY message to clients
-            char* displayStr = getFileMap(spectator);
+            char* SdisplayStr = getFileMap(spectator);
 
-            char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
-            sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-            const char* displayMessage = displayMsg;
-            message_send(spectAddr->spectator, displayMessage);
-          }
+            char SdisplayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
+            sprintf(SdisplayMsg, "DISPLAY\n%s", SdisplayStr);
+            const char* SdisplayMessage = SdisplayMsg;
+            message_send(spectAddr->spectator, SdisplayMessage);
+         // }
         }
         // if not movement key, must be Q
         else{

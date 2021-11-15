@@ -539,7 +539,7 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col)
 */
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position)
 {
-    if (spectatorGrid != NULL && masterGrid != NULL) { return; }
+    if (spectatorGrid == NULL || masterGrid == NULL) { return; }
 
     int positionIndex = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
     
@@ -554,7 +554,7 @@ void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char pl
 */
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
 {
-    if (spectatorGrid != NULL && masterGrid != NULL) { return; }
+    if (spectatorGrid == NULL || masterGrid == NULL) { return; }
 
     int newPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(newPosition), tupleGetY(newPosition)); 
     int oldPositionIndex = charConvertIndexNum(masterGrid, tupleGetX(oldPosition), tupleGetY(oldPosition)); 
