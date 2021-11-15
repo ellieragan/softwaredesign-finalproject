@@ -32,6 +32,7 @@ static int getPlayerin(player_t** players, const addr_t from);
 //static char* getDisplay(player_t* player);
 static char* endMessage(player_t** players, int index);
 void hashDel(void* item);
+static bool isPlayer(const addr_t from, player_t** players, int *index);
 
 typedef struct spect{
   addr_t spectator;
@@ -76,7 +77,7 @@ int main(const int argc, char* argv[]){
   // spectator stored in player struct
   grid_t* spectator = grid_new(map, seed);
   buildPiles(seed,spectator);
-  spect_t* spectAddr = NULL;
+  spect_t* spectAddr = ;
 
   // next open slot in players
   int index = 0;
@@ -88,7 +89,7 @@ int main(const int argc, char* argv[]){
   hashtable_insert(args, "spectator", spectator);
   hashtable_insert(args, "spectAddr", spectAddr);
   hashtable_insert(args,"index", &index);
-  hashtable_insert(args,"seed", &seed);
+  hashtable_insert(args:,"seed", &seed);
 
   message_init(stderr);
   message_loop(args, 0, NULL, NULL, handleMsg);
@@ -227,13 +228,16 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
     return false; // continue loop
   }
-  if (strncmp(message, "SPECTATE ",strlen("SPECTATE ")) == 0){ // SPECTATE type messages
-    const char* msgRest = message + strlen("SPECTATE ");
-    if (spectator != NULL){ // replace existing spectator address with new one
+  if (strncmp(message, "SPECTATE",strlen("SPECTATE")) == 0){ // SPECTATE type messages
+    //const char* content = message + strlen("SPECTATE ");
+    //char msgR[strlen(content)+1];
+    //strcpy(msgR,content);
+    //char* msgRest = m
+    if (spectAddr->spectator != NULL){ // replace existing spectator address with new one
       message_send(spectAddr->spectator,"QUIT You have been replaced by a new spectator.");
       spectAddr = spectCast_new(from);
     }
-    if (spectator == NULL){ // just allocate spectator address
+    if (spectAddr->spectator == NULL){ // just allocate spectator address
       spectAddr = spectCast_new(from);
     }
     
@@ -270,7 +274,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
   if (strncmp(message, "KEY ", strlen("KEY ")) == 0){ // KEY type messages
     const char* msgRest = message + strlen("KEY ");
     // if client is player
-    if (!message_eqAddr(from,spectAddr->spectator)){ // if not spectator
+    if (isPlayer(from,players,index)){ // if not spectator
       // find player in question
       player_t* player = players[getPlayerin(players,from)];
       // if key is valid
@@ -369,9 +373,9 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     message_send(from, "ERROR Invalid message type.");
     return false; // continue loop
   }
-  free(msgType);
-  free(msgRest);
-  free(msgParts);
+  //free(msgType);
+  //free(msgRest);
+  //free(msgParts);
 }
 
 /* parseMsg
@@ -542,4 +546,18 @@ void hashDel(void* item){
   if (item != NULL){
     free(item);
   }
+}
+
+/* isPlayer
+ * Helper for handleMsg
+ * Tests if it is an address of a player
+ */
+static bool isPlayer(const addr_t from, player_t** players, int* index){
+  int pos;
+  for (pos = 0; pos<*index; pos++){
+    if (message_eqAddr(from,getSocketAddr(players[pos]))){
+      return true;
+    }
+  }
+  return false;
 }
