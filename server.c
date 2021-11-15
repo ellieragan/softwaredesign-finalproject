@@ -45,6 +45,7 @@ static spect_t* spectCast_new(const addr_t address){
     return NULL;
   }
   else{
+    printf("spectCast works\n");
     spectCast->spectator = address;
     return spectCast;
   }
@@ -237,12 +238,12 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     //strcpy(msgR,content);
     //char* msgRest = m
     if (message_isAddr(spectAddr->spectator)){ // replace existing spectator address with new one
-      printf("Spectstored\n");
+      printf("SpectstoredhasAddr\n");
       message_send(spectAddr->spectator,"QUIT You have been replaced by a new spectator.");
       spectAddr = spectCast_new(from);
     }
     if (!message_isAddr(spectAddr->spectator)){ // just allocate spectator address
-      printf("Spectstored\n");
+      printf("SpectstorednoAddr\n");
       spectAddr = spectCast_new(from);
     }
     
@@ -321,7 +322,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
 
           /***************************** Dealing with spectator *********************************/
-          //if (message_isAddr(spectAddr->spectator)){
+          if (message_isAddr(spectAddr->spectator)){
             printf("getPast\n");
             // construct and send GRID message to client
             int Snrows = getRows(spectator);
@@ -347,7 +348,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
             sprintf(SdisplayMsg, "DISPLAY\n%s", SdisplayStr);
             const char* SdisplayMessage = SdisplayMsg;
             message_send(spectAddr->spectator, SdisplayMessage);
-         // }
+          }
         }
         // if not movement key, must be Q
         else{
