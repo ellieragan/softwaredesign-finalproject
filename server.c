@@ -217,7 +217,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
       // construct and send DISPLAY message to clients
       char* visibilityStr = getVisibility(players[*index]);
-      char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr);
+      char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr,getCurrentPos(players[*index]));
 
       char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
       sprintf(displayMsg, "DISPLAY\n%s", displayStr);
@@ -308,7 +308,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
           // construct and send DISPLAY message to clients
           char* visibilityStr = getVisibility(players[playerIndex]);
-          char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr);
+          char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr,getCurrentPos(players[playerIndex]));
 
           char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
           sprintf(displayMsg, "DISPLAY\n%s", displayStr);

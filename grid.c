@@ -591,7 +591,7 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
     char* gridDisplay = mem_malloc(sizeof(char) * (getCols(masterGrid) * getRows(masterGrid) + 10)); 
 
     for (int i = 0; i < strlen(playerVisibility); i++) {
-        char* masterMap = masterGrid->filemap; 
+        char* masterMap = masterGrid->filemap;  
 
         if (playerVisibility[i] == alrVis) { // if this location is in memory 
             // TODO -- this won't work right now because we need a clean masterGrid
