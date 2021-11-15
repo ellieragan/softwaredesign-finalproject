@@ -80,10 +80,11 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const ad
 
     // randomly select a position for the player
     tuple_t* currentPos = getRandomPosition(masterGrid); 
+    printf("position: %d, %d\n", tupleGetX(currentPos), tupleGetY(currentPos)); 
 
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetY(currentPos),  tupleGetX(currentPos)); 
-
+    printf("visibility: %s\n", visibility);
     // allocate space and set instance variables
     player_t* player = mem_malloc(sizeof(player_t));
     setRealName(player, realName); 
@@ -104,17 +105,20 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const ad
 /**************** positionInit ****************/
 tuple_t* getRandomPosition(grid_t* grid)
 {
+    srand(getpid()); 
+
     int numRows = getRows(grid); 
     int numCols = getCols(grid); 
+    printf("rows: %d, cols: %d", numRows, numCols); 
 
     int x = rand() % (numRows + 1); 
     int y = rand() % (numCols + 1); 
 
-    tuple_t* tuple = initTuple(x, y); 
-    while (! validSpot(grid, y, x)) {
+    tuple_t* tuple = initTuple(y, x); 
+    while (! validSpot(grid, x, y)) {
         x = rand() % (numRows + 1); 
         y = rand() % (numCols + 1);
-        tuple = initTuple(x, y); 
+        tuple = initTuple(y, x); 
     }
     return tuple; 
 }

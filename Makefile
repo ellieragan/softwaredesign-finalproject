@@ -47,7 +47,7 @@ gridtest: gridtest.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 
-grid.o: tuple.h grid.h
+grid.o: tuple.h grid.h 
 player.o: tuple.h grid.h player.h
 #playertest.o: player.h tuple.h grid.h 
 server.o: player.h tuple.h grid.h

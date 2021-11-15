@@ -63,7 +63,7 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col);
 bool isGold(grid_t* grid, tuple_t* location);
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility);
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
 
 
 /*
@@ -579,8 +579,12 @@ int charConvertIndexNum(grid_t* masterGrid, int col, int row)
     return -1; 
 }
 
-/**************** gridFromVisibility ****************/
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
+/*
+* Function to convert from a visibility array to a char* to be displayed to the user
+* This function maps through the visibility of a given player and then converts to an array
+* of map characters. 
+*/
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position)
 {
     if (masterGrid == NULL || playerVisibility == NULL) { return NULL; }
 
@@ -613,6 +617,8 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
             gridDisplay[i] = ' '; 
         }
     }
+    int index = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
+    gridDisplay[index] = '@'; 
 
     return gridDisplay; 
 }
