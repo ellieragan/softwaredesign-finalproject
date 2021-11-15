@@ -160,7 +160,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     cbreak();
     noecho();
     start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
     attron(COLOR_PAIR(1));
     getmaxyx(stdscr, game.ry, game.rx);
     refresh();
