@@ -2,7 +2,7 @@
 #Ellie Boyd
 #CS 50
 
-L = ../libcs50
+L = ../../tse-ellieragan/libcs50
 S = ../support
 CC = gcc
 CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S

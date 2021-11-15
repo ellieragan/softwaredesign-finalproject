@@ -1,7 +1,9 @@
 /* client.c
  * client for nuggets
- * Ellie Boyd
- * Nov 6 2021
+ * 
+ * team 7: Gitting an A
+ * (Ellie Boyd, Jeffrey Liu, Brian Ng, Donia Tung)
+ * CS50 21F
  */
 
 #include <stdio.h>
@@ -113,7 +115,7 @@ bool parseArgs(const int argc, char* argv[])
 
 static bool handleInput(void* arg) 
 {
-  //use ncurses to make key input into something the server can deal with
+  //gets key input
   char* message = malloc(7);
   char c = getch();
 
@@ -158,7 +160,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     cbreak();
     noecho();
     start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
     attron(COLOR_PAIR(1));
     getmaxyx(stdscr, game.ry, game.rx);
     refresh();
