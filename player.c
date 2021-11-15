@@ -83,7 +83,7 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const ad
 
     // calculate player's visibility at that position 
     char* visibility = initializeVisibility(masterGrid, tupleGetY(currentPos),  tupleGetX(currentPos)); 
-
+    printf("visibility: %s\n", visibility);
     // allocate space and set instance variables
     player_t* player = mem_malloc(sizeof(player_t));
     setRealName(player, realName); 

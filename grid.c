@@ -63,7 +63,7 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col);
 bool isGold(grid_t* grid, tuple_t* location);
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility);
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
 
 
 /*

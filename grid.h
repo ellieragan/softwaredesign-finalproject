@@ -34,7 +34,7 @@ void delete(grid_t* masterGrid);
 char* charConvertIndex(grid_t* masterGrid, char** gridMap);
 int charConvertIndexNum(grid_t* masterGrid, int row, int col);
 char* initializeVisibility(grid_t* masterGrid, int row, int col);
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position)
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
 
 
 /*
