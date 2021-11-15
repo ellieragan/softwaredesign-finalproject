@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "message.h"
 #include "tuple.h"
 #include "grid.h"
@@ -21,16 +22,32 @@
 // function declarations
 static void parseArgs(const int argc, char* argv[]);
 bool handleMsg(void* arg, const addr_t from, const char* message);
-static char** parseMsg(char* msg);
-static int countPlayers(player_t** players);
+//static char** parseMsg(char* msg);
+//static int countPlayers(player_t** players);
 static bool ifEmpty(char* str);
 static char* processName(char* name);
 static char playerID(int playerIndex);
 static bool validKey(char key, bool spectator);
-static int getPlayerin(player_t** players, addr_t* from);
-static char* getDisplay(player_t* player);
-static char* endMessage(player_t** players);
+static int getPlayerin(player_t** players, const addr_t from);
+//static char* getDisplay(player_t* player);
+static char* endMessage(player_t** players, int index);
 void hashDel(void* item);
+
+typedef struct spect{
+  addr_t spectator;
+} spect_t;
+
+static spect_t* spectCast_new(const addr_t address){
+  spect_t* spectCast = mem_malloc(sizeof(addr_t));
+
+  if (spectCast == NULL){
+    return NULL;
+  }
+  else{
+    spectCast->spectator = address;
+    return spectCast;
+  }
+}
 
 // global constants
 int maxNamelength = 50;
@@ -59,7 +76,7 @@ int main(const int argc, char* argv[]){
   // spectator stored in player struct
   grid_t* spectator = grid_new(map, seed);
   buildPiles(seed,spectator);
-  addr_t* spectAddr = NULL;
+  spect_t* spectAddr = NULL;
 
   // next open slot in players
   int index = 0;
@@ -126,13 +143,13 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
   grid_t* masterGrid = hashtable_find(arg, "masterGrid");
   player_t** players = hashtable_find(arg, "players");
   grid_t* spectator = hashtable_find(arg, "spectator");
-  addr_t* spectAddr = hashtable_find(arg, "spectAddr");
+  spect_t* spectAddr = hashtable_find(arg, "spectAddr");
   int* index = hashtable_find(arg,"index");
-  int* seed = hashtable_find(arg,"seed");
+  //int* seed = hashtable_find(arg,"seed");
 
   // handles case when all gold has been collected
   if (getGoldLeft(spectator) <= 0){
-    char* endGame = endMessage(players);
+    char* endGame = endMessage(players,*index);
     // send endGame message to all players
     int pos;
     for (pos = 0; pos<*index; pos++){
@@ -145,13 +162,19 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     return true; // terminates loop
   }
 
-  char msgCpy[strlen(message)+1];
-  strcpy(msgCpy,message);
-  char** msgParts = parseMsg(msgCpy);
-  char* msgType = msgParts[0];
-  char* msgRest = msgParts[1];
+  //char msgCpy[strlen(message)+1];
+  //strcpy(msgCpy,message);
+  //char** msgParts = parseMsg(msgCpy);
+  //char* msgType = msgParts[0];
+  //char* msgRest = msgParts[1];
+  //printf("Type: %s\n",msgType);
+  //printf("Msg: %s\n",msgRest);
 
-  if (strcmp(msgType, "PLAY")){ // PLAY type messages
+  if (strncmp(message, "PLAY ",strlen("PLAY ")) == 0){ // PLAY type messages
+    const char* content = message + strlen("PLAY ");
+    char msgR[strlen(content)+1];
+    strcpy(msgR,content);
+    char* msgRest = msgR;
     // if there are already maxPlayer players
     if (players[maxPlayers-1] != NULL){
       message_send(from, "QUIT Game is full: no more players can join.");
@@ -162,51 +185,56 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     }
     // otherwise, add player to game
     else{
-      char playerID = playerID(*index);
+      char ID = playerID(*index);
 
       // initialize player and place into players array
-      players[*index] = initPlayer(processName(msgRest),playerID,masterGrid,from,seed);
+      players[*index] = initPlayer(processName(msgRest),ID,masterGrid,from);
       
       // construct and send OK message to client
       char okMsg[6]; // OK + space + ID + \0 + extra char
-      sprintf(okMsg,"OK %s",playerID);
-      message_send(from, &okMsg);
+      sprintf(okMsg,"OK %c",ID);
+      const char* okMessage = okMsg;
+      message_send(from, okMessage);
 
       // construct and send GRID message to client
-      int nrows = getRows(getGrid(players[*index]));
-      int ncols = getCols(getGrid(players[*index]));
+      int nrows = getRows(spectator);
+      int ncols = getCols(spectator);
       
       char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
       sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-      message_send(from, &gridMsg);
+      const char* gridMessage = gridMsg;
+      message_send(from, gridMessage);
 
       // construct and send GOLD message to clients
       int remain = getGoldLeft(spectator);
 
       char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
       sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
-      message_send(from, &goldMsg);
+      const char* goldMessage = goldMsg;
+      message_send(from, goldMessage);
 
       // construct and send DISPLAY message to clients
-      char* displayStr = getDisplay(players[*index]);
+      char* displayStr = getVisibility(players[*index]);
 
       char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
       sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-      message_send(from, &displayMsg);
+      const char* displayMessage = displayMsg;
+      message_send(from, displayMessage);
       
       free(displayStr);
 
-      *index++; // add to index count
+      (*index)++; // add to index count
     }
     return false; // continue loop
   }
-  if (strcmp(msgType, "SPECTATE")){ // SPECTATE type messages
+  if (strncmp(message, "SPECTATE ",strlen("SPECTATE ")) == 0){ // SPECTATE type messages
+    const char* msgRest = message + strlen("SPECTATE ");
     if (spectator != NULL){ // replace existing spectator address with new one
-      message_send(getSocketAddr(spectator),"QUIT You have been replaced by a new spectator.");
-      spectAddr = from;
+      message_send(spectAddr->spectator,"QUIT You have been replaced by a new spectator.");
+      spectAddr = spectCast_new(from);
     }
     if (spectator == NULL){ // just allocate spectator address
-      spectAddr = from;
+      spectAddr = spectCast_new(from);
     }
     
     // construct and send GRID message to client
@@ -215,30 +243,34 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
     char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
     sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-    message_send(from, &gridMsg);
+    const char* gridMessage = gridMsg;
+    message_send(from, gridMessage);
 
     // construct and send GOLD message to clients
     int remain = getGoldLeft(spectator);
 
     char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
     sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
-    message_send(from, &goldMsg);
+    const char* goldMessage = goldMsg;
+    message_send(from, goldMessage);
 
     // construct and send DISPLAY message to clients
     char* displayStr = getFileMap(spectator);
 
     char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
     sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-    message_send(from, &displayMsg);
+    const char* displayMessage = displayMsg;
+    message_send(from, displayMessage);
 
     free(displayStr);
 
     return false; // continue loop
   }
 
-  if (strcmp(msgType, "KEY")){ // KEY type messages
+  if (strncmp(message, "KEY ", strlen("KEY ")) == 0){ // KEY type messages
+    const char* msgRest = message + strlen("KEY ");
     // if client is player
-    if (!message_eqAddr(from,spectAddr)){ // if not spectator
+    if (!message_eqAddr(from,spectAddr->spectator)){ // if not spectator
       // find player in question
       player_t* player = players[getPlayerin(players,from)];
       // if key is valid
@@ -248,30 +280,33 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
           /******************************* Dealing with player *************************************/
           // update player grid and send new display to player
           char key = msgRest[0]; // cast as char
-          movePlayer(player,masterGrid,spectator,key,players);
+          int goldCol = handlePlayerMove(player,masterGrid,spectator,key,players);
           int playerIndex = getPlayerin(players, from);
           
           // construct and send GRID message to client
-          int nrows = getRows(getGrid(players[playerIndex]));
-          int ncols = getCols(getGrid(players[playerIndex]));
+          int nrows = getRows(spectator);
+          int ncols = getCols(spectator);
 
           char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
           sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-          message_send(from, &gridMsg);
+          const char* gridMessage = gridMsg;
+          message_send(from, gridMessage);
 
           // construct and send GOLD message to clients
-          int remain = getGoldLeft(masterGrid);
+          int remain = getGoldLeft(spectator);
 
           char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
-          sprintf(goldMsg, "GOLD %d %d %d",0,0,remain); // how do I get the first two values???????
-          message_send(from, &goldMsg);
+          sprintf(goldMsg, "GOLD %d %d %d",goldCol,getGold(players[playerIndex]),remain); 
+          const char* goldMessage = goldMsg;
+          message_send(from, goldMessage);
 
           // construct and send DISPLAY message to clients
-          char* displayStr = getDisplay(players[playerIndex]);
+          char* displayStr = getVisibility(players[playerIndex]);
 
           char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
           sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-          message_send(from, &displayMsg);
+          const char* displayMessage = displayMsg;
+          message_send(from, displayMessage);
 
 
           /***************************** Dealing with spectator *********************************/
@@ -282,21 +317,24 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
 
             char gridMsg[20]; // GRID + space + 5 digit rows + space + 5 digit cols + \0 + 2 extra chars
             sprintf(gridMsg,"GRID %d %d",nrows,ncols);
-            message_send(spectAddr, &gridMsg);
+            const char* gridMessage = gridMsg;
+            message_send(spectAddr->spectator, gridMessage);
 
             // construct and send GOLD message to clients
             int remain = getGoldLeft(spectator);
 
             char goldMsg[15]; // GOLD + space + 0 + space + 0 + 4 digit remianing gold + \0 + 2 extra chars
             sprintf(goldMsg, "GOLD %d %d %d",0,0,remain);
-            message_send(spectAddr, &goldMsg);
+            const char* goldMessage = goldMsg;
+            message_send(spectAddr->spectator, goldMessage);
 
             // construct and send DISPLAY message to clients
             char* displayStr = getFileMap(spectator);
 
             char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
             sprintf(displayMsg, "DISPLAY\n%s", displayStr);
-            message_send(spectAddr, &displayMsg);
+            const char* displayMessage = displayMsg;
+            message_send(spectAddr->spectator, displayMessage);
           }
         }
         // if not movement key, must be Q
@@ -341,39 +379,39 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
  * The string in index position 0 indicates msg type (PLAY, SPECTATE, KEY)
  * The string in index position 1 contains the rest of the message
  */
-static char** parseMsg(char* msg){
-  char** msgParts = calloc(2,sizeof(char*));
+//static char** parseMsg(char* msg){
+//  char** msgParts = calloc(2,sizeof(char*));
   
-  msgParts[0] = msg;
+//  msgParts[0] = msg;
 
-  char* ptr = msg;
-  while(!isspace(*ptr) && (strcmp(*ptr,"\0") != 0)){ // slide to first space or end of msg
-    ptr++;
-  }
-  if (isspace(*ptr)){ // break message into 2 parts
-    ptr = "\0";
-    ptr++;
-    msgParts[1] = ptr;
-  }
-  else{ // if there is only 1 part
-    msgParts[2] = NULL;
-  }
-
-  return msgParts;
-}
+//  char* ptr = msg;
+//  while(!isspace(*ptr) && (*ptr != '\0')){ // slide to first space or end of msg
+//    ptr++;
+//  }
+//  if (isspace(*ptr)){ // break message into 2 parts
+//    ptr = "\0";
+//    ptr++;
+//    msgParts[1] = ptr;
+//  }
+//  else{ // if there is only 1 part
+//    msgParts[2] = NULL;
+//  }
+//
+// return msgParts;
+//}
     
 /* countPlayers
  * Helper function of handleMsg
  * Counts number of players in player_t**
  */
-static int countPlayers(player_t** players){
-  int count;
+//static int countPlayers(player_t** players){
+//  int count;
 
-  for (count = -1; players[count] != NULL; count++){
-  }
+//  for (count = -1; players[count] != NULL; count++){
+//  }
 
-  return count;
-}
+//  return count;
+//}
 
 /* ifEmpty
  * Helper function of handleMsg
@@ -399,13 +437,13 @@ static bool ifEmpty(char* str){
  */
 static char* processName(char* name){
   if (strlen(name) > maxNamelength){
-    name[maxNamelength] = "\0";
+    name[maxNamelength] = '\0';
   }
 
   int index;
   for (index = 0; index < strlen(name); index++){
     if (!isgraph(name[index]) && !isblank(name[index])){
-      name[index] = "_";
+      name[index] = '_';
     }
   }
   return name;
@@ -432,7 +470,7 @@ static char playerID(int playerIndex){
 static bool validKey(char key, bool spectator){
   // if is spectator; only valid key is Q
   if (spectator){
-    if (key != "Q"){
+    if (key != 'Q'){
       return false;
     }
     else{
@@ -456,36 +494,36 @@ static bool validKey(char key, bool spectator){
 /* getPlayerin
  * Gets player's index in players array
  */
-static int getPlayerin(player_t** players, addr_t* from){
+static int getPlayerin(player_t** players, const addr_t from){
   int index;
   for (index = 0; index < maxPlayers; index++){
     if (message_eqAddr(from,getSocketAddr(players[index]))){
         return index;
     }
   }
-  return NULL;
+  return -1;
 }
 
 /* getDisplay
  * Helper function for handleMsg
  * Gets display string of player object
  */
-static char* getDisplay(player_t* player){
-  return getFileMap(getGrid(player));
-}
+//static char* getDisplay(player_t* player){
+//  return getFileMap(getGrid(player));
+//}
 
 /* endMessage
  * Helper function for handleMsg
  * Constructs game over message when all gold has been collected
  */
-static char* endMessage(player_t** players){
+static char* endMessage(player_t** players, int index){
   char* msg = "QUIT GAME OVER:";
 
   int pos;
   for (pos = 0; pos<index; pos++){
     if (players[pos] != NULL){
       char* newLine = malloc(sizeof(char)*100); // 100 chars per line will be more than enough space
-      sprintf(newLine,"\n%s %6d %s",playerID(pos),getGold(players[pos]),getRealName(players[pos]));
+      sprintf(newLine,"\n%c %6d %s",playerID(pos),getGold(players[pos]),getRealName(players[pos]));
       char* newMsg = malloc(sizeof(msg)+sizeof(newLine)+10);
       sprintf(newMsg,"%s%s",msg,newLine);
       free(msg);
