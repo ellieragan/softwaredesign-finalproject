@@ -579,7 +579,11 @@ int charConvertIndexNum(grid_t* masterGrid, int col, int row)
     return -1; 
 }
 
-/**************** gridFromVisibility ****************/
+/*
+* Function to convert from a visibility array to a char* to be displayed to the user
+* This function maps through the visibility of a given player and then converts to an array
+* of map characters. 
+*/
 char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position)
 {
     if (masterGrid == NULL || playerVisibility == NULL) { return NULL; }
