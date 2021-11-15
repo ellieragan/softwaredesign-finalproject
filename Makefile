@@ -30,13 +30,13 @@ all:
 tuple: tuple.h
 	$(CC) $(CFLAGS) $^ -o $@
 
-grid:grid.o tuple.o $(LLIBS)
-	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
-
 player:	player.h player.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 playertest: playertest.o player.o grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
+gridtest: gridtest.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 
@@ -44,6 +44,7 @@ grid.o: tuple.h grid.h
 player.o: tuple.h grid.h player.h
 playertest.o: player.h tuple.h grid.h 
 tuple.o: tuple.h
+gridtest.o: grid.h
 
 test:
 	$(MAKE) -C $S
