@@ -100,9 +100,7 @@ Outputs: As per the requirements spec, the server has no output directly visible
 We anticipate the following functions or modules in our server: 
 * *main* will drive the module 
 * *parseArgs* which will parse and validate the inputted file
-* *initGrid* which will initialize the grid and set gold randomly throughout the maze
-* *receiveMessages* which will be resonsible for handling the messages from the client & acting accordingly
-* *sendMessages* which will send messages to the client
+* *handleMsg* handles all message sending to clients
 
 We will rely on two helper modules, *grid* and *player*, which define distict data structures that hold the grid structure or the player structure. The grid will maintain a 2D array of the loaded grid. The player structure will maintain its real name, local name, gold collected, current location, and a grid object (containing the "visited" or visible spaces on the grid that the player has seen). 
 
@@ -130,6 +128,16 @@ Maintains an array of the loaded grid. Contains the following:
 4. gold remaining
 5. number of gold piles
 
+### Functional decomposition into modules
+We anticipate the following functions or modules in our grid: 
+* *grid_new* creates a new grid that includes the data structure
+* *buildPiles* generates the piles of gold
+* *initializeVisibility* initializes a visibility array
+* *updateVisibility* updates the visibility array as a player moves in a grid
+* *updateGold* removes gold from a pile and updates it accordingly to a room spot
+* *gridFromVisibility* converts a one dimensional visibility array into a grid file map 
+
+See the implementation spec for more details about each modules.
 
 ### Player
 Contains the following data about players:
@@ -141,6 +149,13 @@ Contains the following data about players:
 6. socket address
 
 There will be getters and setters for each of these fields. Visibility will be implemented as a component of the player data structure, as it is necessary to update the grid object upon a player's movement. 
+
+### Functional decomposition into modules
+We anticipate the following functions or modules in our grid: 
+* *checkValidMove* checks if a move is in a valid spot
+* *addPlayerGold* adds to a player's gold count, draws upon *updateGold*
+* *playerStep* moves a player in a provided direction in response to a key
+* *playerSprint* sprints a player to a wall
 
 See the implementation spec for more details about each modules.
 
@@ -158,3 +173,5 @@ Jeff --> Grid
 * reviewing PRs on github 
 * testing for their own code 
 * communication ! 
+
+

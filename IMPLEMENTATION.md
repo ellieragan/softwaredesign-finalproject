@@ -123,7 +123,7 @@ typedef struct player{
     tuple_t* currentPosition; 
     int gold; 
     addr_t socket; 
-} player_t; 
+} player_t; **
 ```
 #### Grid (detailed implementation under Grid Module)
 ```c=
@@ -131,7 +131,7 @@ typedef struct grid{
     char* map;
     int rows;
     int cols;
-    int gold;
+    int goldPiles;
     int goldLeft;
 }
 ```
@@ -160,6 +160,54 @@ static int parseArgs(const int argc, char* argv[]);
 A function that is provided the address from which the message arrived, and a string containing the contents of the message. The handler should realize the string's memory will be reused upon return from the handler.
 ```c
 bool handleMsg(void* arg, const addr_t from, const char* message));
+```
+
+#### ifEmpty
+finds if a string is empty
+```c=
+static bool ifEmpty(char* str);
+```
+
+#### processName
+truncates over real name and replaces non graph/blank characters with an underscore
+```c=
+static char* processName(char* name);
+```
+
+#### playerID 
+gets player ID
+```c=
+static char playerID(int playerIndex);
+```
+
+#### validKey
+tests whether key is a valid key
+```c=
+static bool validKey(char key, bool spectator);
+```
+
+#### getPlayerin
+gets player's index in players array
+```c=
+static int getPlayerin(player_t** players, const addr_t from);
+```
+
+#### endMessage
+constructs game over message at end of game
+```c=
+static char* endMessage(player_t** players, int index);
+```
+
+#### hashDel
+delete function for hashtable_delete
+```c=
+void hashDel(void* item);
+```
+
+#### isPlayer
+checks if it is address of a player
+```c=
+static bool isPlayer(const addr_t from, player_t** players, int* index);
 ```
 
 
@@ -348,17 +396,30 @@ typedef struct grid{
 Additionally, defines a visibility array that holds a value to represent whether a specific point is visible or not. 
 ### Definition of function prototypes
 ```c=
-grid_t* grid_new(char* filemap, int seed);
-char* getFileMap(grid_t* playerGrid);
-int getRows(grid_t* playerGrid);
-int getCols(grid_t* playerGrid);
-int getNumPiles(grid_t* playerGrid);
-int getGoldLeft(grid_t* playerGrid);
-void buildPiles(int seed, grid_t* playerGrid);
-int updateGoldCount(grid_t* playerGrid, int goldDecrease, tuple_t* location);
-void updateVisibility(grid_t* playerGrid, tuple_t* location);
-void delete(grid_t* playerGrid);
-grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char* playerID, tuple_t* newLocation); 
+grid_t* grid_new(char* filename, int seed);
+grid_t* grid_newHelper(char* fileMap, int rows, int cols);
+char* getFileMap(grid_t* masterGrid);
+int getRows(grid_t* masterGrid);
+int getCols(grid_t* masterGrid);
+int getNumPiles(grid_t* masterGrid);
+int getGoldLeft(grid_t* masterGrid);
+void buildPiles(int seed, grid_t* masterGrid);
+int updateGoldCount(grid_t* masterGrid, tuple_t* position);
+void buildUpdatedVisibility(char* updatedVis);
+char* updateVisibility(grid_t* masterGrid, int colCord, int rowCord, char* visibility); 
+bool colCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid);
+bool rowCheck(int row, int col, int rowCord, int colCord, float slope, float intercept, grid_t* masterGrid);
+float slopeCalc(int r, int c, int row, int col);
+float interceptCalc(int r, int c, float slope);
+bool validSpot(grid_t* masterGrid, int row, int col);
+void delete(grid_t* masterGrid);
+int charConvertIndexNum(grid_t* masterGrid, int col, int row);
+char* initializeVisibility(grid_t* masterGrid, int row, int col);
+bool isGold(grid_t* grid, tuple_t* location);
+void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
+void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
+
 ```
 ### Detailed pseudo code
 #### `grid_new`
@@ -497,3 +558,5 @@ This is not an extensive description of the tests we intend to include and will 
 We intend to add to this section once we've implemented our nuggets game. 
 > Bulleted list of any limitations of your implementation.
 > This section may not be relevant when you first write your Implementation Plan, but could be relevant after completing the implementation.
+
+

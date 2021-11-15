@@ -77,9 +77,13 @@ typedef struct grid grid_t;
 
 ## Known bugs
 
-* Newlines are not showing up on the map in player mode, so the map does not render correctly
-* Gold does not get picked up by the player when the player moves over it
 * There is a core dump when the spectator quits (although not when the player quits, which is odd)
+* Sometimes the visibility does not work completely and gold/other players will vanish even if they are in the line of sight of another player
+* We do not properly store the address of the spectator which leads to the following known function
+    * The spectator and players do not update in real time; players only update when a movement key is pressed
+    * More than one spectator can currently join the game
+* Passageway visibility is off; it is treated like normal visibility instead of only showing one `#` in advance
+* server segfaults at end of game when not run with valgrind because player does not store player names correctly
 
 ## Materials provided
 
