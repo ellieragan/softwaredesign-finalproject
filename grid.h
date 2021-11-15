@@ -39,7 +39,15 @@ void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char pl
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
 char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position);
 
-
+/*
+* Reads the input map from the server module and the seed to create the map. Sets
+* gold values as asteriks through predetermined minGold and maxGold as per specs.
+*
+* Inputs: map filename, seed
+* Outputs: if found, a grid initialized with gold, gold remaining, height, width 
+*
+*/
+grid_t* grid_new(char* filename, int seed);
 
 /*
 * Reads the input map from the server module and the seed to create the map. Sets
@@ -128,7 +136,7 @@ void buildUpdatedVisibility(char* updatedVis);
 * Output: N/A
 *
 */
-char* updateVisibility(grid_t* masterGrid, int rowCord, int colCord, char* visibility); 
+char* updateVisibility(grid_t* masterGrid, int colCord, int rowCord, char* visibility); 
 
 /*
 * Initializes a visibility array that keeps track of a player's visibiility.
@@ -191,7 +199,21 @@ void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerI
 */
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 
+/*
+* Updates the spectator grid by switching the old position with the new position, drawing from master grid.
+*
+* Input: a spectator grid, the master grid, a player ID, a tuple that represents a player's new position, and the old positino
+* Output: N/A
+*/
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
 
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position);
+
+/*
+* Function to convert from a visibility array to a char* to be displayed to the user
+* This function maps through the visibility of a given player and then converts to an array
+* of map characters. 
+*
+* Inputs: a masterGrid, the spectator grid, an array that represents the player visibility, a player's position 
+*/
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
 

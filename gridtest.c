@@ -55,14 +55,14 @@ int main()
   } 
   else 
   {
-    printf("getFileMap map returns NULL n\n");
+    printf("getFileMap map returns NULL\n");
   }
 
   printf("Test with grid1...\n");
   filemap = getFileMap(grid1);
   if (filemap != NULL)
   {
-    printf("getFileMap map returmns...\n%s", filemap);
+    printf("getFileMap map returns...\n%s", filemap);
   } else
   {
     printf("getFileMap map returns NULL\n\n");
@@ -123,7 +123,6 @@ int main()
   printf("----------------------\n\n\n");
  
 
-  printf("Testing updateVisibility...\n\n"); 
   
   visible = malloc((strlen(filemap) * sizeof(char) + 1));
   strcpy(visible, filemap);
@@ -136,11 +135,21 @@ int main()
     else 
     {
       visible[i] = '3'; //Initializes a visibility array by setting all to 3, reepresenting not visible
-    }
+    }                   // without consideration for player
   }
   visible[strlen(filemap)] = '\0';
 
+
+  printf("Testing the initialization of a visibility array...\n");
+  char* visInit = initializeVisibility(grid1, 5, 19); //X-coordinate is 19, while Y-coordinate is 5
+  printf("The visibility array represents:\n%s", visInit);
+
+
+  printf("Testing updateVisibility...\n\n"); 
+
+
   char* updated = malloc(sizeof(char) * (strlen(filemap) + 1));
+
   printf("Testing the grid that is NULL...\n");
   updated = updateVisibility(grid, 1, 1, visible);
   printf("The visibility array represents:\n%s", updated);
