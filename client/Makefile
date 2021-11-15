@@ -17,7 +17,6 @@ all: client
 client: $(OBJS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
-
 test:
 	bash -v testing.sh >& testing.out
 

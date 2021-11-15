@@ -6,7 +6,9 @@
 
 S = support
 L = libcs50
-OBJS = server.o player.o grid.o
+# OBJS = server.o player.o grid.o
+OBJS = client.o ../support/message.o ../support/log.o
+
 LIBS = -lm -lncurses
 LLIBS = $S/support.a $L/libcs50-given.a
 
@@ -25,7 +27,7 @@ all:
 	$(MAKE) -C $S
 	$(MAKE) playertest
 	$(MAKE) server
-	# $(MAKE) client
+	make -C client
 
 tuple: tuple.h
 	$(CC) $(CFLAGS) $^ -o $@
@@ -45,7 +47,7 @@ server: server.o player.o grid.o tuple.o $(LLIBS)
 gridtest: gridtest.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
-client: client.o
+client: ./client/client.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
 
@@ -55,7 +57,6 @@ playertest.o: player.h tuple.h grid.h
 server.o: player.h tuple.h grid.h
 tuple.o: tuple.h
 gridtest.o: grid.h
-
 
 test:
 	$(MAKE) -C $S
