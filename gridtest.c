@@ -29,7 +29,7 @@ int main()
   printf("Testing grid_new...\n\n");
 
   printf("Creating grid1... \n");
-  grid_t* grid1 = grid_new("maps/visdemo.txt", getpid());
+  grid_t* grid1 = grid_new("maps/main.txt", getpid());
   if (grid1 == NULL)
   {
     fprintf(stderr, "The initialization failed!\n");
@@ -55,14 +55,14 @@ int main()
   } 
   else 
   {
-    printf("getFileMap map returns NULL n\n");
+    printf("getFileMap map returns NULL\n");
   }
 
   printf("Test with grid1...\n");
   filemap = getFileMap(grid1);
   if (filemap != NULL)
   {
-    printf("getFileMap map returmns...\n%s", filemap);
+    printf("getFileMap map returns...\n%s", filemap);
   } else
   {
     printf("getFileMap map returns NULL\n\n");
@@ -135,13 +135,13 @@ int main()
     else 
     {
       visible[i] = '3'; //Initializes a visibility array by setting all to 3, reepresenting not visible
-    }
+    }                   // without consideration for player
   }
   visible[strlen(filemap)] = '\0';
 
 
   printf("Testing the initialization of a visibility array...\n");
-  char* visInit = initializeVisibility(grid1, 5, 19);
+  char* visInit = initializeVisibility(grid1, 5, 19); //X-coordinate is 19, while Y-coordinate is 5
   printf("The visibility array represents:\n%s", visInit);
 
 

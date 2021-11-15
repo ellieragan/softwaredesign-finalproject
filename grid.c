@@ -60,7 +60,7 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col);
 bool isGold(grid_t* grid, tuple_t* location);
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility);
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position); 
 
 
 /*
@@ -471,7 +471,7 @@ bool validSpot(grid_t* masterGrid, int row, int col)
 */
 bool isGold(grid_t* grid, tuple_t* location)
 {
-    int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
+    int index = charConvertIndexNum(grid, tupleGetY(location), tupleGetX(location)); 
     return (grid->filemap[index] == pile); 
 }
 
@@ -584,17 +584,16 @@ int charConvertIndexNum(grid_t* masterGrid, int col, int row)
 * This function maps through the visibility of a given player and then converts to an array
 * of map characters. 
 *
-* Inputs: a masterGrid, the spectator grid, and an array that represents the player visibility 
+* Inputs: a masterGrid, the spectator grid,  an array that represents the player visibility, and a tuple that represents the position
 */
-
-char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position)
 {
     if (masterGrid == NULL || playerVisibility == NULL) { return NULL; }
 
     char* gridDisplay = mem_malloc(sizeof(char) * (getCols(masterGrid) * getRows(masterGrid) + 10)); 
 
     for (int i = 0; i < strlen(playerVisibility); i++) {
-        char* masterMap = masterGrid->filemap; 
+        char* masterMap = masterGrid->filemap;  
 
         if (playerVisibility[i] == alrVis) { // if this location is in memory 
             // one that contains where all the gold is and such 
@@ -619,6 +618,8 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
             gridDisplay[i] = ' '; 
         }
     }
+    int index = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
+    gridDisplay[index] = '@'; 
 
     return gridDisplay; 
 }

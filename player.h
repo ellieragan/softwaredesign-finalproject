@@ -28,23 +28,15 @@ typedef struct player player_t; // opaque to users of the module
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, addr_t* socket, int* seed);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket);
 
-/**************** addPlayerGold ****************/
-/* Add gold to a player's gold count 
+/**************** handlePlayerMove ****************/
+/* Handles movement of a player, processes between sprints and steps 
 * 
-* input: the player who collected gold and the amount of gold collected
-* output: n/a
+* input: player to move, master grid, spectator grid, the key pressed, and a list of other players
+* output: an int representing the amount of gold collected (if any) by the movement
 */
-void addPlayerGold(player_t* player, int goldCollected);
-
-/**************** movePlayer ****************/
-/* Moves player and updates their grid of viewed spaces
-* 
-* input: player who moved, the key they pressed, and a list of the other players in the game
-* output: the updated grid of the player's viewed maze 
-*/
-int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
+int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 
 /**************** deletePlayer ****************/
 /* Deletes the player object and clears associated memory 
@@ -53,32 +45,6 @@ int movePlayer(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char
 * output: n/a
 */
 void deletePlayer(player_t* player); 
-
-/**************** helper functions ****************/
-
-/****************  ****************/
-/*  
-* 
-* input: 
-* output: 
-*/
-bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
-
-/****************  ****************/
-/*  
-* 
-* input: 
-* output: 
-*/
-tuple_t* determineNewPosition(player_t* player, char keyPressed);
-
-/****************  ****************/
-/*  
-* 
-* input: 
-* output: 
-*/
-tuple_t* getRandomPosition(grid_t* grid, int seed); 
 
 /**************** getters and setters ****************/
 
@@ -168,8 +134,7 @@ void setGold(player_t* player, int gold);
 * input: player
 * output: pointer to the player's socket address
 */
-addr_t* getSocketAddr(player_t* player); 
-
+const addr_t getSocketAddr(player_t* player); 
 
 /**************** setSocketAddr ****************/
 /* set a player's socket address
@@ -177,4 +142,56 @@ addr_t* getSocketAddr(player_t* player);
 * input: player and address of socket
 * output: n/a
 */
-void setSocketAddr(player_t* player, addr_t* socketAddr); 
+void setSocketAddr(player_t* player, const addr_t socketAddr); 
+
+/**************** helper functions ****************/
+
+/**************** getRandomPosition ****************/
+/*  helper method for generating a random position in the grid
+* used in initPlayer
+* 
+* input: the grid
+* output: a random position in the grid
+*/
+tuple_t* getRandomPosition(grid_t* grid); 
+
+/**************** checkValidMove ****************/
+/*  checks whether or not a move to a new position is valid
+* 
+* input: the spectator grid with gold piles, the new position to test, and a list of other players
+* output: boolean value representing whether or not the new position is valid 
+*/
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
+
+/**************** addPlayerGold ****************/
+/*  function for adding to a player's gold count 
+* 
+* input: player and the amount of gold collected
+* output: n/a
+*/
+void addPlayerGold(player_t* player, int goldCollected); 
+
+/**************** getNextPosition ****************/
+/*  function for generating the next position of a player based on deltaX and deltaY
+* 
+* input: starting position, deltaX, deltaY
+* output: the resulting position from that move
+*/
+tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY);
+
+/**************** playerStep ****************/
+/*  driver for player step, determines new position, checks the position is valid, 
+* if valid, updates gold (if necessary), updates the player's visibility, and updates spectatorGrid
+* 
+* input: player to move, deltaX, deltaY, master and spectator grids, and a list of other players
+* output: int representing the amount of gold collected
+*/
+int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
+
+/**************** playerSprint ****************/
+/*  driver for sprint. calls playerStep until the next position of the player is invalid 
+* 
+* input: player to move, deltaX, deltaY, master and spectator grids, and a list of other players
+* output: int representing the amount of gold collected
+*/
+int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);

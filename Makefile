@@ -24,27 +24,36 @@ VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
 all: 
 	$(MAKE) -C $S
 	$(MAKE) grid 
-	$(MAKE) player 
+	$(MAKE) player
 	$(MAKE) playertest
+	$(MAKE) server
 
 tuple: tuple.h
 	$(CC) $(CFLAGS) $^ -o $@
 
-player:	player.h player.o $(LLIBS)
+grid: grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
+player: player.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 playertest: playertest.o player.o grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
+server: server.o player.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 gridtest: gridtest.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
 
-grid.o: tuple.h grid.h
+grid.o: tuple.h grid.h 
 player.o: tuple.h grid.h player.h
 playertest.o: player.h tuple.h grid.h 
+server.o: player.h tuple.h grid.h
 tuple.o: tuple.h
 gridtest.o: grid.h
+
 
 test:
 	$(MAKE) -C $S
@@ -63,7 +72,7 @@ clean:
 	rm -f vgcore.*
 	rm -f core
 	cd $S && $(MAKE) clean
-
+	
 # L = libcs50
 # S = support
 # CC = gcc
