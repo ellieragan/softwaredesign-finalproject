@@ -157,11 +157,11 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     int pos;
     for (pos = 0; pos<*index; pos++){
       if (players[pos] != NULL){
-        deletePlayer(players[pos]);
+        //deletePlayer(players[pos]);
         message_send(getSocketAddr(players[pos]),endGame);
       }
     }
-    free(endGame);
+    //free(endGame);
     return true; // terminates loop
   }
 
