@@ -190,7 +190,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       char ID = playerID(*index);
 
       // initialize player and place into players array
-      players[*index] = initPlayer(processName(msgRest),ID,masterGrid,from);
+      players[*index] = initPlayer(processName(msgRest),ID,masterGrid,from,spectator);
       
       // construct and send OK message to client
       char okMsg[6]; // OK + space + ID + \0 + extra char
@@ -224,7 +224,7 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       const char* displayMessage = displayMsg;
       message_send(from, displayMessage);
       
-      free(displayStr);
+      //free(displayStr);
 
       (*index)++; // add to index count
     }

@@ -229,7 +229,7 @@ int getGoldLeft(grid_t* masterGrid)
 * Output: N/A
 */
 void buildPiles(int seed, grid_t* masterGrid)
-{
+{   
     int piles = (int)(rand() % (maxGold - minGold + 1)) + minGold; 
 
     masterGrid -> goldPiles = piles; 
@@ -461,7 +461,7 @@ float interceptCalc(int r, int c, float slope)
 bool validSpot(grid_t* masterGrid, int row, int col)
 {
     int index = (row - 1) * masterGrid -> cols + col - 1;
-    return (masterGrid -> filemap[index] == room || masterGrid -> filemap[index] == pile);
+    return (masterGrid -> filemap[index] == room || masterGrid -> filemap[index] == pile || masterGrid -> filemap[index] == passage);
 }
 
 /*
@@ -471,7 +471,7 @@ bool validSpot(grid_t* masterGrid, int row, int col)
 */
 bool isGold(grid_t* grid, tuple_t* location)
 {
-    int index = charConvertIndexNum(grid, tupleGetY(location), tupleGetX(location)); 
+    int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
     return (grid->filemap[index] == pile); 
 }
 
@@ -592,12 +592,15 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
 
     char* gridDisplay = mem_malloc(sizeof(char) * (getCols(masterGrid) * getRows(masterGrid) + 10)); 
 
-    for (int i = 0; i < strlen(playerVisibility); i++) {
+    for (int i = 0; i < strlen(playerVisibility); i++) { // loop through map
         char* masterMap = masterGrid->filemap;  
-
-        if (playerVisibility[i] == alrVis) { // if this location is in memory 
+        
+        if (playerVisibility[i] == '\n'){
+          gridDisplay[i] = '\n';
+        }
+        else if (playerVisibility[i] == alrVis) { // if this location is in memory 
             // one that contains where all the gold is and such 
-            if (masterMap[i] == pile || isupper(masterMap[i]) != 0 ) {
+            if (spectatorGrid[i] == pile || isupper(spectatorGrid[i]) != 0 ) {
    
                 if (masterMap[i] == passage) { // if it's a passage, should be # 
                     gridDisplay[i] = passage; 

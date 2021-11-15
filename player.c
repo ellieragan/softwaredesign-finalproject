@@ -20,7 +20,7 @@
 
 /**************** file-local global variables ****************/
 static const int left = -1; 
-static const int right = +1; 
+static const int right = 1; 
 static const int up = -1; 
 static const int down = 1; 
 
@@ -40,7 +40,7 @@ typedef struct player{
 /**************** global functions ****************/
 /* that is, visible outside this file */
 /* see player.h for comments about exported functions */
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket, grid_t* spectator);
 int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 void deletePlayer(player_t* player); 
 
@@ -71,7 +71,7 @@ void setSocketAddr(player_t* player, const addr_t socketAddr);
 
 
 /**************** initPlayer ****************/
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket)
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket, grid_t* spectator)
 {
     // validate inputs aren't null
     if (realName == NULL || (isalpha(ID) == 0) || masterGrid == NULL) {
@@ -97,6 +97,8 @@ player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const ad
         getCurrentPos(player) == NULL ) { // TODO: why didn't getSocketAddr(player) == NULL work? 
         return NULL; 
     } 
+
+    addPlayerToSpectatorGrid(spectator,masterGrid,ID,currentPos);
 
     return player; 
 }
@@ -128,7 +130,7 @@ bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players)
     int y = tupleGetY(newPosition); 
 
     // validate within bounds 
-    if (x < 0 || x > getRows(grid) || y < 0 || y > getCols(grid)) { return false; }
+    if (x < 0 || x > getCols(grid) || y < 0 || y > getRows(grid)) { return false; }
    
     // validate not a wall
     if (! validSpot(grid, y, x)) { return false; }
@@ -210,8 +212,10 @@ int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, 
 
     // if new position is valid 
     if (checkValidMove(spectatorGrid, newPosition, players)) {
+      printf("\ntesttest");
         // check if gold and update accordingly
         if (isGold(spectatorGrid, newPosition)) {
+          printf("\nisGold");
             goldCollected = updateGoldCount(spectatorGrid, newPosition); // get amount of gold collected
             addPlayerGold(player, goldCollected); // update player's count of their gold 
         }

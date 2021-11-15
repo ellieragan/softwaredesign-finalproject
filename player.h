@@ -28,7 +28,7 @@ typedef struct player player_t; // opaque to users of the module
 * input: initial values for player's internal instance variables 
 * output: a pointer to the initialized player data struct or NULL if unable to initialize
 */
-player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket);
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket, grid_t* spectator);
 
 /**************** handlePlayerMove ****************/
 /* Handles movement of a player, processes between sprints and steps 

@@ -64,7 +64,7 @@ int main(const int argc, char* argv[]){
     printf("------------------------------------------\n\n");
     
     // testing handlePlayerMove
-    player_t* player = initPlayer(realname, ID, masterGrid, address);
+    player_t* player = initPlayer(realname, ID, masterGrid, address,spectatorGrid);
 
     printf("Testing handlePlayerMove with a valid step: \n"); 
     testValidPlayerStep(player, masterGrid, spectatorGrid); 
@@ -94,7 +94,7 @@ int main(const int argc, char* argv[]){
 void testWorkingPlayerInit(grid_t* grid)
 {
     printf("Initializing player... \n"); 
-    player_t* player = initPlayer(realname, ID, masterGrid, address); 
+    player_t* player = initPlayer(realname, ID, masterGrid, address,spectatorGrid); 
     if (player == NULL) {
         fprintf(stderr, "Initializing working player failed\n"); 
         return; 
@@ -104,7 +104,7 @@ void testWorkingPlayerInit(grid_t* grid)
 void testInvalidNamePlayerInit(grid_t* grid) 
 {
     printf("Initializing player... \n"); 
-    player_t* player = initPlayer(NULL, ID, masterGrid, address); 
+    player_t* player = initPlayer(NULL, ID, masterGrid, address,spectatorGrid); 
     if (player == NULL) {
         printf("Invalid name inputs test passed\n"); 
         return; 
@@ -114,7 +114,7 @@ void testInvalidNamePlayerInit(grid_t* grid)
 void testInvalidGridPlayerInit() 
 {
     printf("Initializing player... \n"); 
-    player_t* player = initPlayer(realname, ID, NULL, address); 
+    player_t* player = initPlayer(realname, ID, NULL, address,spectatorGrid); 
     if (player == NULL) {
         printf("Invalid grid inputs test passed\n"); 
         return; 
