@@ -1,5 +1,5 @@
 /*
-* grid.c file 
+* grid.c file - More detail is contained within the grid.h file
 *
 * Jeffrey Liu, November 2021
 */
@@ -32,7 +32,6 @@ static const char passage = '#';
 static const int minGold = 10;
 static const int maxGold = 30;
 static const int totalGold = 250;
-//static const int maxPlayers = 26;
 
 static const char vis = '1'; 
 static const char alrVis = '2';
@@ -56,10 +55,8 @@ float slopeCalc(int r, int c, int row, int col);
 float interceptCalc(int r, int c, float slope);
 bool validSpot(grid_t* masterGrid, int row, int col);
 void delete(grid_t* masterGrid);
-char* charConvertIndex(grid_t* masterGrid, char** gridMap);
 int charConvertIndexNum(grid_t* masterGrid, int col, int row);
 char* initializeVisibility(grid_t* masterGrid, int row, int col);
-
 bool isGold(grid_t* grid, tuple_t* location);
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position); 
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
@@ -113,7 +110,6 @@ grid_t* grid_new(char* filename, int seed)
     start[totalCount] = '\0'; //Marks the end of the array
 
     grid_t* masterGrid = grid_newHelper(start, rowNum, colNum);
-    // buildPiles(seed, masterGrid);
 
     return masterGrid;
 }
@@ -468,7 +464,11 @@ bool validSpot(grid_t* masterGrid, int row, int col)
     return (masterGrid -> filemap[index] == room || masterGrid -> filemap[index] == pile);
 }
 
-
+/*
+* Checks if there is gold left in the grid
+* Input: a mastergrid, the location of a player
+* Output: true if there is gold; otherwise, false.
+*/
 bool isGold(grid_t* grid, tuple_t* location)
 {
     int index = charConvertIndexNum(grid, tupleGetX(location), tupleGetY(location)); 
@@ -550,7 +550,7 @@ void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char pl
 * Updates the spectator grid by switching the old position with the new position, drawing from master grid.
 *
 * Input: a spectator grid, the master grid, a player ID, a tuple that represents a player's new position, and the old positino
-*
+* Output: N/A
 */
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
 {
@@ -583,6 +583,8 @@ int charConvertIndexNum(grid_t* masterGrid, int col, int row)
 * Function to convert from a visibility array to a char* to be displayed to the user
 * This function maps through the visibility of a given player and then converts to an array
 * of map characters. 
+*
+* Inputs: a masterGrid, the spectator grid, and an array that represents the player visibility 
 */
 
 char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility)
@@ -595,8 +597,7 @@ char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVi
         char* masterMap = masterGrid->filemap; 
 
         if (playerVisibility[i] == alrVis) { // if this location is in memory 
-            // TODO -- this won't work right now because we need a clean masterGrid
-            // and also one that contains where all the gold is and such 
+            // one that contains where all the gold is and such 
             if (masterMap[i] == pile || isupper(masterMap[i]) != 0 ) {
    
                 if (masterMap[i] == passage) { // if it's a passage, should be # 

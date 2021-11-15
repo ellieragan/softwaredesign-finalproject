@@ -29,7 +29,7 @@ int main()
   printf("Testing grid_new...\n\n");
 
   printf("Creating grid1... \n");
-  grid_t* grid1 = grid_new("maps/main.txt", getpid());
+  grid_t* grid1 = grid_new("maps/visdemo.txt", getpid());
   if (grid1 == NULL)
   {
     fprintf(stderr, "The initialization failed!\n");
@@ -123,7 +123,6 @@ int main()
   printf("----------------------\n\n\n");
  
 
-  printf("Testing updateVisibility...\n\n"); 
   
   visible = malloc((strlen(filemap) * sizeof(char) + 1));
   strcpy(visible, filemap);
@@ -140,7 +139,17 @@ int main()
   }
   visible[strlen(filemap)] = '\0';
 
+
+  printf("Testing the initialization of a visibility array...\n");
+  char* visInit = initializeVisibility(grid1, 5, 19);
+  printf("The visibility array represents:\n%s", visInit);
+
+
+  printf("Testing updateVisibility...\n\n"); 
+
+
   char* updated = malloc(sizeof(char) * (strlen(filemap) + 1));
+
   printf("Testing the grid that is NULL...\n");
   updated = updateVisibility(grid, 1, 1, visible);
   printf("The visibility array represents:\n%s", updated);
