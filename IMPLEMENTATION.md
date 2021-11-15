@@ -32,53 +32,79 @@ None
 
 ### Definition of function prototypes
 
-*parseArgs* is a function to parse the command-line arguments, initialize the game struct, initialize the message module, and initialize analytics module:
+*parseArgs* is a function to check the command-line arguments and initialize the message module, returning true if the 3rd "player name" argument was given and false otherwise:
 ```c
-static int parseArgs(const int argc, char* argv[]);
+bool parseArgs(const int argc, char* argv[]);
 ```
 
-*receiveMessages* is a function to receieve messages sent by the server:
+*handleInput* is a function to take in keyboard input from a player and send "KEY" messages to the server:
 ```c
-static void receiveMessages(int socket);
+static bool handleInput(void* arg);
 ```
 
-*sendMessages* is a function that sends messages to the server:
+*handleMessage* is a function to take messages from the server and update the screen and game struct accordingly:
 ```c
-static void sendMessages(int socket);
+static bool handleMessage(void* arg, const addr_t from, const char* message);
 ```
 
-*outputMap* is a function that iterates through the map string sent by the server and prints it onto the screen for the player:
-```c
-static void outputMap(char* map);
-```
 
 ### Detailed pseudo code
 
 #### `main`:
     
     call parseArgs
-    initialize address to given hostname and port
+    assign command line variables
+    initialize address with hostname and port
     send message to server to join game as player or spectator
-    call recieveMessages to wait for response from server
-    message_done
+    call message_loop to wait for response from server
+    call message_done
 
 #### `parseArgs`:
 
-	validate commandline
-	initialize message module
-	print assigned port number
-	decide whether spectator or player
+	check if message module can be initialized
+    check for correct number of command line arguments
+	return true if a player name argument is provided
+    else return false
 
-#### `receiveMessages`:
-    calls message_loop with handleMessage
-    
-#### `sendMessages`:
-    calls message_send
+#### `handleInput`:
+    gets key input
+    if the user is a player:
+        if the character is not EOF:
+            send any letter input to the server
+        else:
+            immediately send Q
+    else if the user is a spectator:
+        can only send Q
+    return false
     
 #### `handleMessage`:
-    update screen as indicated by message from server
-    
-    
+    if message is OK:
+        get the letter that represents a player and store it in the game struct
+    if message is GRID:
+        initialize ncurses
+        check to see if screen size is big enough to fit grid
+        tell user to increase screen size if necessary
+        check screen size again, repeating process until screen is big enough
+    if message is GOLD:
+        store the recently found gold, total found gold, and undiscovered gold in the game struct.
+    if message is DISPLAY:
+        clear window
+        if the user is a player:
+            if gold has been found on the most recent move:
+                print gold message with a "recently received" update
+            else:
+                print gold message without a "recently received" update
+        else if user is spectator:
+            inform spectator of gold situation
+        print map
+    if message is QUIT:
+        shut down ncurses
+        print quit message to stdout
+        return true
+    if message is ERROR:
+        log error and continue
+    return false
+        
 ---
 
 ## Server
@@ -92,11 +118,10 @@ static void outputMap(char* map);
 ```c=
 typedef struct player{
     char* realName; 
-    char* ID; 
-    grid_t* grid; 
-    tuple_t* currentPos; 
+    char ID; 
+    char* visibility; 
+    tuple_t* currentPosition; 
     int gold; 
-    bool spectator; 
     addr_t socket; 
 } player_t; 
 ```
@@ -108,6 +133,12 @@ typedef struct grid{
     int cols;
     int gold;
     int goldLeft;
+}
+```
+#### spect (wrapper struct for spectator address)
+```c=
+typedef struct spect{
+    addr_t spectator;
 }
 ```
 ### Definition of function prototypes
@@ -130,17 +161,7 @@ A function that is provided the address from which the message arrived, and a st
 ```c
 bool handleMsg(void* arg, const addr_t from, const char* message));
 ```
-#### handleTO
-A function that is called when time passes without input or message.
-```c
-bool handleTO(void* arg);
-```
 
-#### handleStdin
-A function that should read once from stdin and process it.
-```c
-bool handleStdin(void* arg);
-```
 
 ### Detailed pseudo code
 
@@ -152,7 +173,8 @@ bool handleStdin(void* arg);
 
     Initializes array containing player objects
     Calls parseArgs
-    Calls message_loop, passing the array of player objects as the argument
+    Calls message_loop
+    Frees things
 
 #### `parseArgs`
 
@@ -165,17 +187,46 @@ bool handleStdin(void* arg);
 		seed the random-number generator with getpid()
 
 #### `handleMsg`
-    Grab player object corresponding to address
-    Parse message and determine which function to call:
-        Call methods in player data structure, sending messages back to client accordingly
+    Fetch all items from args(passed on from main)
+
+    if all gold has been collected:
+        print end game message for all players and quit game
+        delete all player structs and free items
+        end loop
+    if message type is PLAY:
+        if there at maxPalyers:
+            Send message to Player client telling them to quit
+        if player name is empty:
+            send quit message
+        otherwise:
+            add player to game and send appropriate messages
+    if message type is SPECTATE:
+        if there is existing spectator:
+            replace existing spectator address with new one
+        if there is no current spectator address:
+            allocate spectator address
+        send appropriate messages
+    if message type is KEY:
+        if is player:
+            if key is valid:
+                if it is a movement key:
+                    pass appropriate messages to player
+                    pass appropriate messages to spectator
+                if quit key:
+                    send quit message
+                    remove client
+            else:
+                return error
+        if is spectator:
+            if key is valid:
+                quit
+            else:
+                return error
+    if invalid message type:
+        return error
+            
         
-#### `handleTO`
-    Sends message to client telling it to terminate
-    Terminates connection with client
-    Deletes player object from array
-    
-#### `handleStdin`
-    Doesn't do anything as Server doesn't take stdin commands
+
 ---
 
 ## Player module 
@@ -184,10 +235,9 @@ The player module will be responsible for holding key information about each pla
 The player will contain, as instance variables: 
 * String: Real name 
 * String: Alphabet ID (local name)
-* Grid: Grid of "viewed" locations
-* Int tuple: Current location 
+* Visibility: Array of what's visible, in memory, and non-visible to thee player
+* Tuple: Current location 
 * Int: Gold collected 
-* Boolean: representing whether or not the player is a spectator or participating client 
 * Address type: socket # for the player
 
 ### Data structures
@@ -195,11 +245,10 @@ The module is itself defining a new data structure that will contain the requisi
 ```c=
 typedef struct player{
     char* realName; 
-    char* ID; 
-    grid_t* grid; 
-    tuple_t* currentPos; 
+    char ID; 
+    char* visibility; 
+    tuple_t* currentPosition; 
     int gold; 
-    bool spectator; 
     addr_t socket; 
 } player_t; 
 ```
@@ -213,16 +262,25 @@ typedef struct tuple{
 ```
 
 ### Definition of function prototypes
-For the purposes of cleanliness and simplicity, we won't list the getters and setters for the data module here. To find more information on them, reference `playerStruct.h`. Assume that getters and setters exist for each of the 5 instance variables contained within the player module. 
+For the purposes of cleanliness and simplicity, we won't list the getters and setters for the data module here. To find more information on them, reference `player.h`. Assume that getters and setters exist for each of the 5 instance variables contained within the player module. 
 
-The other functions within the data structure are as follows: 
+The other functions within the data structure, accessed by server, are as follows: 
 ```c=
-void initPlayer(char* realName, char* ID, grid_t* grid, tuple_t* currentPos, bool spectator); 
-int addGold(player_t* player, int goldCollected, int*) remainingGold);
-grid_t* movePlayer(player_t* player, grid_t* masterGrid, char* keyPressed, player_t** players); 
-grid_t* updateSpectator(player_t* player, grid_t* masterGrid, char* keyPressed, player_t* spectator, player** players)
+player_t* initPlayer(char* realName, const char ID, grid_t* masterGrid, const addr_t socket);
+int handlePlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid, char keyPressed, player_t** players);
 void deletePlayer(player_t* player); 
 ```
+Otherwise, the data module contains the following helper functions: 
+```c=
+tuple_t* getRandomPosition(grid_t* grid); 
+bool checkValidMove(grid_t* grid, tuple_t* newPosition, player_t** players); 
+void addPlayerGold(player_t* player, int goldCollected); 
+tuple_t* getNextPosition(tuple_t* position, int deltaX, int deltaY);
+int playerStep(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
+int playerSprint(player_t* player, int deltaX, int deltaY, grid_t* spectatorGrid, grid_t* masterGrid, player_t** players);
+
+```
+
 
 ### Detailed pseudo code
 #### `initPlayer`
@@ -231,55 +289,41 @@ The `initPlayer` function is responsible for initializing a new player data stru
 validate inputs
 if valid: 
     allocate memory for a new player struct 
+    call initializeVisibility from grid to initialize the player's visible array
     set instance variables based on input 
     return player object
 else: 
-    print to stderr requesting the missing/invalid input 
-    return; 
-```
-
-#### `addGold`
-The `addGold` function is responsible for updating a player's gold variable and decrementing the total amount of remaining gold in the game. 
-```c=
-get player's current gold count 
-increment by goldCollected
-subtract goldCollected from remainingGold 
-return player's goldCollected 
+    return NULL; 
 ```
 
 #### `movePlayer`
 The `movePlayer` function handles a player's movement, updating their internal grid of viewed/visited spots. First, we validate the new location. It calls `updateGrid`, defined in the grid module, which handles visibility. It returns the updated grid, which is passed back to the server, for communication to the client. 
 ```c=
-parse keyPressed to determine new location of player
-validate location would be "inside" the maze/not a wall 
-if valid: 
-    call setCurrentPos with new location
-    call updateGrid, passing the player's grid, new location, and list of other players 
-    set player's grid to output of updateGrid
-    return output of updateGrid 
-else: 
-    print to err that the player tried to move off the grid/out of bounds
-    return;  
-```
+parse keyPressed to determine movement type
+if step 
+    determine new location of player
+    validate new location 
+    if valid:
+        if gold in new location: 
+            updateGold
+            add gold count to player
+        update player visibility
+        update player currentPosition
+        call spectatorGridUpdate
 
-#### `updateSpectator`
-The `updateSpectator` method updates the grid of the spectator client. First, we validate the new location. It calls `updateSpectatorGrid` to update the grid of the spectator. Then we return the updated grid, which is passed back to the server, for communication to the client.
-```c=
-parse keyPressed to determine new location of player
-validate location would be "inside" the maze/not a wall
-if valid: 
-    call updateSpectatorGrid, passing the spectator's grid, the local ID of the player that moved, and the new location of that player.
-    set spectators's grid to output of updateSpectatorGrid
-    return output of updateSpectatorGrid
+if sprint
+    while the player's next position is valid 
+        call step
+return goldCollected (0 if no gold collected, int if gold was collected) 
 else: 
-    print to err that the player tried to move off the grid/out of bounds
-    return;
+    don't move
+    return;  
 ```
 
 #### `deletePlayer`
 `deletePlayer` is responsible for clearing the memory associated with a given player. It will be called after a game is quit. 
 ```c=
-delete player's grid 
+free memory for the player's name & visibility array 
 delete player object
 ```
 
@@ -314,7 +358,7 @@ void buildPiles(int seed, grid_t* playerGrid);
 int updateGoldCount(grid_t* playerGrid, int goldDecrease, tuple_t* location);
 void updateVisibility(grid_t* playerGrid, tuple_t* location);
 void delete(grid_t* playerGrid);
-grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char playerID, tuple_t* newLocation); 
+grid_t* updateSpectatorGrid(grid_t* spectatorGrid, char* playerID, tuple_t* newLocation); 
 ```
 ### Detailed pseudo code
 #### `grid_new`
@@ -327,7 +371,6 @@ store columns as line length
 iterate through file
     store each character into char array
 initialize grid structure with row, columns, array, gold constants
-call buildPiles to display gold on grid
 returns grid
 ```
 #### `getFileMap`
@@ -352,6 +395,7 @@ The `getTotalGold` method returns the total amount of gold.
 The `updateGoldCount` method removes gold from the map when necessary and appropriately decreases the count. 
 ``` C=
 change the grid into an one-dimensional array
+removes a random amount of gold on a pile
 change the pile to normal spot in the array
 ```
 
@@ -371,11 +415,25 @@ iterate through all points of a grid
             set not visible at that specific grid point   
 set all others to visible
 ```
-#### `updateSpectatorGrid`
+#### `initializeVisibility`
+The `initializeVisibility` method initializes the visibility array. 
 ```C=
-iterates through all indexes in a visibility array
-    sets all elements to visible
+Loops through all items in a grid
+    Sets all items to not visible
+Changes the current player's location to visible via updateVisibility
 ```
+
+#### `gridFromVisibility`
+The `gridFromVisibility` method converts from a visibility array to an array of map characters. 
+```C=
+Loops through all items of the visibility array
+    Checks if a point is located in memory
+        Checks if passage or room
+    Sets spectator grid into passage or room
+Add the player icon 
+```
+
+
 
 ---
 
@@ -386,8 +444,8 @@ iterates through all indexes in a visibility array
 We intend to write unit tests for each individual module that ensure baseline functionality. These unit tests will test and check that each individual function within the module is working correctly. 
 #### Client 
 1. Test with invalid inputs from user 
-2. Test receive message function with valid methods and invalid methods 
-3. Test send message function with various messages that get sent to the server. 
+2. Test send and receive message functions using the server and client provided by Professor Palmer to make sure that our client responds to messages in the same way his does
+3. Test send and receive message functions by redirecting all messages to stderr and then into a log file to make sure that messages are being sent and received correctly
 
 #### Server
 1. Test with invalid inputs (invalid map)
@@ -406,7 +464,7 @@ We intend to write unit tests for each individual module that ensure baseline fu
 1. Test grid_new with maps of different sizes, increasing complexity  
 3. Test getters and setters
 4. Test updateVisibility with mocked inputs
-5. Test updateSpectatorGrid with mocked inputs
+5. Test updateGold with mocked inputs
 
 
 ### Integration testing

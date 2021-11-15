@@ -1,19 +1,29 @@
-# README.md for Nuggets
-## team 7 - Gitting an A
+# Nuggets
+## README
+### Team 7 (Ellie Boyd, Jeffrey Liu, Brian Chun Yin Ng, Donia Tung), Fall, 2021
 
-This repository contains the code for the CS50 "Nuggets" game, in which players explore a set of rooms and passageways in search of gold nuggets.
-The rooms and passages are defined by a *map* loaded by the server at the start of the game.
-The gold nuggets are randomly distributed in *piles* within the rooms.
-Up to 26 players, and one spectator, may play a given game.
-Each player is randomly dropped into a room when joining the game.
-Players move about, collecting nuggets when they move onto a pile.
-When all gold nuggets are collected, the game ends and a summary is printed.
-
+This repository contains the code for the CS50 "Nuggets" game, in which players explore a set of rooms and passageways in search of gold nuggets. The rooms and passages are defined by a map loaded by the server at the start of the game. The gold nuggets are randomly distributed in piles within the rooms. Up to 26 players, and one spectator, may play a given game. Each player is randomly dropped into a room when joining the game. Players move about, collecting nuggets when they move onto a pile. When all gold nuggets are collected, the game ends and a summary is printed.
 
 ## Usage
 
 To build `nuggets`, run `make`
 To clean up, run `make clean`
+Run server and client by following the specs in the requirements. 
+
+
+We have individual unit tests for the `grid` and `player` data modules.
+
+gridtest is built and run with the following
+```bash
+make gridtest
+./gridtest
+```
+
+playertest is built and run with the following
+```bash
+make playertest
+./playertest
+```
 
 `nuggets` includes:
 
@@ -60,6 +70,6 @@ typedef struct grid grid_t;
 
 ## Materials provided
 
-See the [support library](support/README.md) for some useful modules.
+See the support library for some useful modules.
 
-See the [maps](maps/README.md) for some draft maps.
+See the maps for some draft maps.

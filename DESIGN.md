@@ -61,21 +61,19 @@ The client is responsible for the UI for gameplay and it's "output" will be the 
 We anticipate the following functions and modules:
 * *main* to drive the client module 
 * *parseArgs* to determine validity of arguments
-* *receiveMessages* to receive messages from sever
-* *sendMessages* to send messages to server
-* *outputMap* to parse through map string and output to user
+* *handleMessage* to receive messages from sever
+* *handleInput* to send messages to server
 
 
 ### Pseudo code for logic/algorithmic flow
 ```
 parse arguments from user, validate arguments
-starts game with message to server
-upon valid response from server of player/spectator 
-    return respective game screen 
+start game with message to server asking to enter game as player or spectator
+start message loop to wait for responses from server 
 
 listen for keyboard input from user: 
-    send messages to server
-listen for messages from server
+    send movement and quit messages to server
+listen for responses from server
     update game screen accordingly 
 ```
 
@@ -123,26 +121,33 @@ While there is gold on the map:
 Exit game, display scores
 ```
 
-### Major data structures
-#### Grid
-Maintains a 2D array of the loaded grid. Contains the following:
+## Other data structures
+### Grid
+Maintains an array of the loaded grid. Contains the following:
 1. grid string
-2. gold collected
-3. gold remaining
-#### Player
+2. num rows
+3. num cols
+4. gold remaining
+5. number of gold piles
+
+
+### Player
 Contains the following data about players:
 1. real name
 2. local name
 3. gold collected
 4. current location
-5. grid object
+5. visibility object
+6. socket address
 
 There will be getters and setters for each of these fields. Visibility will be implemented as a component of the player data structure, as it is necessary to update the grid object upon a player's movement. 
 
+See the implementation spec for more details about each modules.
+
 ## Division of labor 
-Brian --> Server, receiving & sending messages
+Brian --> Server
     
-Donia --> Player data structure, visibility  
+Donia --> Player
 
 Ellie --> Client
 
