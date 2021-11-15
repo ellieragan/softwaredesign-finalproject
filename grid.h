@@ -39,7 +39,15 @@ void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char pl
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition); 
 char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility, tuple_t* position);
 
-
+/*
+* Reads the input map from the server module and the seed to create the map. Sets
+* gold values as asteriks through predetermined minGold and maxGold as per specs.
+*
+* Inputs: map filename, seed
+* Outputs: if found, a grid initialized with gold, gold remaining, height, width 
+*
+*/
+grid_t* grid_new(char* filename, int seed);
 
 /*
 * Reads the input map from the server module and the seed to create the map. Sets

@@ -6,7 +6,9 @@
 
 S = support
 L = libcs50
-OBJS = server.o player.o grid.o
+# OBJS = server.o player.o grid.o
+OBJS = client.o ../support/message.o ../support/log.o
+
 LIBS = -lm -lncurses
 LLIBS = $S/support.a $L/libcs50-given.a
 
@@ -23,10 +25,9 @@ VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
 
 all: 
 	$(MAKE) -C $S
-	$(MAKE) grid 
-	$(MAKE) player
 	$(MAKE) playertest
 	$(MAKE) server
+	make -C client
 
 tuple: tuple.h
 	$(CC) $(CFLAGS) $^ -o $@
@@ -46,6 +47,9 @@ server: server.o player.o grid.o tuple.o $(LLIBS)
 gridtest: gridtest.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
+client: ./client/client.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+
 
 grid.o: tuple.h grid.h 
 player.o: tuple.h grid.h player.h
@@ -53,7 +57,6 @@ playertest.o: player.h tuple.h grid.h
 server.o: player.h tuple.h grid.h
 tuple.o: tuple.h
 gridtest.o: grid.h
-
 
 test:
 	$(MAKE) -C $S
@@ -73,41 +76,3 @@ clean:
 	rm -f core
 	cd $S && $(MAKE) clean
 	
-# L = libcs50
-# S = support
-# CC = gcc
-# CFLAGS = -Wall -pedantic -std=c11 -ggdb -I$L -I$S
-
-# OBJS = tuple.o # player.o grid.o 
-# LIBS = $S/support.a $L/libcs50-given.a -lcurses -lm
-
-# .PHONY: all clean
-
-# all: playertest
-
-# playertest.o: tuple.o grid.o player.o player.h
-# playertest: playertest.o
-# 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
-
-# tuple.o: tuple.h
-
-# tuple: tuple.o # $(LIBS)
-# 	$(CC) $(CFLAGS) $^ -o $@
-
-# grid.o: tuple.o grid.h
-
-# grid: grid.o $(LIBS)
-# 	$(CC) $(CFLAGS) $^ -o $@
-
-# player.o: tuple.o grid.o player.h
-
-# player: player.o $(LIBS)
-# 	$(CC) $(CFLAGS) $^ -o $@
-
-# test:
-# 	bash -v testing.sh >& testing.out
-
-# clean:
-# 	rm -f *~ *.o
-# 	rm -rf *.dSYM
-# 	rm -f core
