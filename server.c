@@ -306,7 +306,8 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
           message_send(from, goldMessage);
 
           // construct and send DISPLAY message to clients
-          char* displayStr = getVisibility(players[playerIndex]);
+          char* visibilityStr = getVisibility(players[playerIndex]);
+          char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr);
 
           char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
           sprintf(displayMsg, "DISPLAY\n%s", displayStr);
