@@ -349,7 +349,7 @@ char* updateVisibility(grid_t* masterGrid, int colCord, int rowCord, char* visib
 
                 if(visibleBoth)
                 {
-                    updatedVis[index] = vis;
+                    updatedVis[index] = vis; 
                 }
                 else if (updatedVis[index] != alrVis)
                 {
@@ -517,28 +517,41 @@ char* initializeVisibility(grid_t* masterGrid, int row, int col)
             }
             else if(temp[i] == '\n')
             {
-                visibility[i] = '\n';
+                visibility[i] = '\n'; //Accounts for the end of the file and 
             }
             else
             {
                 visibility[i] = notVis;
             }
         }
-        char* updatedVisibility = updatedVisibility(masterGrid, col, row, visibility);
-        return updatedVisibility;
+        char* updatedVisibility = updateVisibility(masterGrid, col, row, visibility);
+        return updatedVisibility; //Updates the visibility for the current position of a player
     }
     return NULL;
 }
 
+
+/*
+* Adds a player to the spectator grid which is further implemented in the player module
+* 
+* Inputs: a spectator grid, the master grid, a player ID, and a tuple that represents the position 
+* Output: N/A
+*/
 void addPlayerToSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* position)
 {
-     if (spectatorGrid != NULL && masterGrid != NULL) { return; }
+    if (spectatorGrid != NULL && masterGrid != NULL) { return; }
 
     int positionIndex = charConvertIndexNum(masterGrid, tupleGetX(position), tupleGetY(position)); 
     
     spectatorGrid->filemap[positionIndex] = playerID; 
 }
 
+/*
+* Updates the spectator grid by switching the old position with the new position, drawing from master grid.
+*
+* Input: a spectator grid, the master grid, a player ID, a tuple that represents a player's new position, and the old positino
+*
+*/
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition)
 {
     if (spectatorGrid != NULL && masterGrid != NULL) { return; }
@@ -549,32 +562,6 @@ void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerI
     spectatorGrid->filemap[newPositionIndex] = playerID; 
     spectatorGrid->filemap[oldPositionIndex] = masterGrid->filemap[oldPositionIndex];
 }
-
-
-/*
-*
-*
-*
-*
-*/
-char* charConvertIndex(grid_t* masterGrid, char** gridMap)
-{
-    char* convertedIndex = malloc(strlen(masterGrid -> filemap));
-    if(masterGrid != NULL && gridMap != NULL)
-    {
-        for(int i = 0; i < masterGrid -> rows; i++)
-        {
-            for(int k = 0; k < masterGrid -> cols; k++)
-            {
-                int index = (masterGrid -> cols) * (i - 1) + (k -1);
-                convertedIndex[index] = gridMap[i][k];
-            }
-        }
-        return convertedIndex;
-    }
-    return NULL;
-}
-
 
 /*
 * Method that converts a row and column coordinate into an one-dimensional index for 
