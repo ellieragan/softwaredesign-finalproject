@@ -128,3 +128,5 @@ void delete(grid_t* playerGrid);
 * Output: a spectator grid that contains complete visibility of the map
 */
 void updateSpectatorGrid(grid_t* spectatorGrid, grid_t* masterGrid, char playerID, tuple_t* newPosition, tuple_t* oldPosition);
+
+char* gridFromVisibility(grid_t* masterGrid, char* spectatorGrid, char* playerVisibility);

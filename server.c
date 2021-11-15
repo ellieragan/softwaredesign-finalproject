@@ -216,7 +216,8 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
       message_send(from, goldMessage);
 
       // construct and send DISPLAY message to clients
-      char* displayStr = getVisibility(players[*index]);
+      char* visibilityStr = getVisibility(players[*index]);
+      char* displayStr = gridFromVisibility(masterGrid,getFileMap(spectator),visibilityStr);
 
       char displayMsg[nrows*ncols+1000]; // num of chars in map display string + 1000 extra chars
       sprintf(displayMsg, "DISPLAY\n%s", displayStr);
@@ -361,8 +362,9 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
         // only possible key is Q
         if (strcmp(msgRest,"Q") == 0){
           message_send(from,"QUIT Thanks for watching!");
-          spectAddr = NULL;
-          }
+          const addr_t noAddr = message_noAddr();
+          spectAddr = spectCast_new(noAddr);
+        }
       }
       // if not valid key
       else{
