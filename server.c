@@ -77,7 +77,8 @@ int main(const int argc, char* argv[]){
   // spectator stored in player struct
   grid_t* spectator = grid_new(map, seed);
   buildPiles(seed,spectator);
-  spect_t* spectAddr = ;
+  const addr_t noAddr = message_noAddr();
+  spect_t* spectAddr = spectCast_new(noAddr);
 
   // next open slot in players
   int index = 0;
@@ -89,7 +90,7 @@ int main(const int argc, char* argv[]){
   hashtable_insert(args, "spectator", spectator);
   hashtable_insert(args, "spectAddr", spectAddr);
   hashtable_insert(args,"index", &index);
-  hashtable_insert(args:,"seed", &seed);
+  hashtable_insert(args,"seed", &seed);
 
   message_init(stderr);
   message_loop(args, 0, NULL, NULL, handleMsg);
@@ -233,11 +234,11 @@ bool handleMsg(void* arg, const addr_t from, const char* message){
     //char msgR[strlen(content)+1];
     //strcpy(msgR,content);
     //char* msgRest = m
-    if (spectAddr->spectator != NULL){ // replace existing spectator address with new one
+    if (message_isAddr(spectAddr->spectator)){ // replace existing spectator address with new one
       message_send(spectAddr->spectator,"QUIT You have been replaced by a new spectator.");
       spectAddr = spectCast_new(from);
     }
-    if (spectAddr->spectator == NULL){ // just allocate spectator address
+    if (!message_isAddr(spectAddr->spectator)){ // just allocate spectator address
       spectAddr = spectCast_new(from);
     }
     
