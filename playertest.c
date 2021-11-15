@@ -56,7 +56,7 @@ int main(const int argc, char* argv[]){
 
     printf("Testing playerInit with invalid name input: \n"); 
     testInvalidNamePlayerInit(masterGrid); 
-    printf("playerInit with invalid input name test done \n"); 
+    printf("playerInit with invalid input name test done \n\n"); 
 
     printf("Testing playerInit with invalid grid: \n"); 
     testInvalidGridPlayerInit(); 
@@ -76,24 +76,17 @@ int main(const int argc, char* argv[]){
 
     printf("Testing handlePlayerMove with a invalid move (out of bounds): \n"); 
     testOutOfBoundsPlayerMove(player, masterGrid, spectatorGrid); 
-    printf("handlePlayerMove with a invalid move (out of bounds) test done\n");
+    printf("handlePlayerMove with a invalid move (out of bounds) test done\n\n");
 
-    // printf("Testing handlePlayerMove with a invalid move (into a wall): \n"); 
-    // testWallPlayerMove(); 
-    // printf("handlePlayerMove with a invalid move (into a wall) test done\n"); 
+    printf("Testing handlePlayerMove with a invalid move (into a wall): \n"); 
+    testWallPlayerMove(player, masterGrid, spectatorGrid); 
+    printf("handlePlayerMove with a invalid move (into a wall) test done\n"); 
 
-    // printf("Testing handlePlayerMove with a invalid move (into another player): \n"); 
-    // testOtherPlayerMove(); 
-    // printf("handlePlayerMove with a invalid move (into another player) test done\n");
-
-    printf("------------------------------------------");
+    printf("------------------------------------------\n");
     
     // testing deletePlayer
     printf("Testing delete player\n"); 
     testDeletePlayer(player); 
-    // if (player == NULL) {
-    //     printf("player deleted successfully\n");
-    // }
     printf("delete player test done\n");
 
 }
@@ -165,20 +158,20 @@ void testOutOfBoundsPlayerMove(player_t* player, grid_t* masterGrid, grid_t* spe
 
 void testWallPlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid)
 {
-    tuple_t* playerPosition = initTuple(5, 3); 
+    tuple_t* playerPosition = initTuple(1, 3); 
     setCurrentPos(player, playerPosition); 
     tuple_t* pos = getCurrentPos(player); 
     printf("player original position: %d, %d\n", tupleGetX(pos), tupleGetY(pos)); 
-    int gold = handlePlayerMove(player, masterGrid, spectatorGrid, 'k', NULL);
+    int gold = handlePlayerMove(player, masterGrid, spectatorGrid, 'h', NULL);
     printf("amount of gold collected by player movement (should be 0): %d\n", gold);
     pos = getCurrentPos(player); 
     printf("player new position: %d, %d\n", tupleGetX(pos), tupleGetY(pos));
 }
 
-void testOtherPlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid)
-{
-    return;
-}
+// void testOtherPlayerMove(player_t* player, grid_t* masterGrid, grid_t* spectatorGrid)
+// {
+//     return;
+// }
 
 void testDeletePlayer(player_t* player)
 {
