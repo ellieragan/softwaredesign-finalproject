@@ -43,12 +43,16 @@ player: player.o grid.o tuple.o $(LLIBS)
 server: server.o player.o grid.o tuple.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
 
+gridtest: gridtest.o grid.o tuple.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LLIBS) $(LIBS) -o $@
+
 
 grid.o: tuple.h grid.h
 player.o: tuple.h grid.h player.h
 #playertest.o: player.h tuple.h grid.h 
 server.o: player.h tuple.h grid.h
 tuple.o: tuple.h
+gridtest.o: grid.h
 
 
 test:
