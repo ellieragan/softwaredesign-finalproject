@@ -58,15 +58,28 @@ typedef struct grid grid_t;
 ## Files
 
 `grid.c` - the grid module
+
 `grid.h` - header file for grid
+
 `player.c` - the player module
+
 `player.h` - header file for player
+
 `server.c` - the server module
+
 `client.c` - the client module
+
 `DESIGN.md` - design spec for nuggets
+
 `IMPLEMENTATION.md` - implementation spec for nuggets
+
 `Makefile` - the compilation and testing procedures
 
+## Known bugs
+
+* Newlines are not showing up on the map in player mode, so the map does not render correctly
+* Gold does not get picked up by the player when the player moves over it
+* There is a core dump when the spectator quits (although not when the player quits, which is odd)
 
 ## Materials provided
 
